@@ -1,0 +1,20 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/rabbita_tui/examples/counter"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+type CounterModel derive(Eq, @debug.Debug)
+
+type CounterMsg derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

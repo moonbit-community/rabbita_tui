@@ -1,0 +1,122 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/rabbita_tui/widgets"
+
+import {
+  "moonbit-community/rabbita_tui",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn keymap(bindings~ : Array[KeyBinding], width~ : Int, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+
+pub fn modal(title~ : String, size~ : @rabbita_tui.Size, style? : @rabbita_tui.Style, Array[@rabbita_tui.Node]) -> @rabbita_tui.Node
+
+pub fn paginator(page~ : Int, per_page~ : Int, total_items~ : Int, width~ : Int, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+
+pub fn progress(current~ : Int, total~ : Int, width~ : Int, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+
+pub fn spinner(style? : @rabbita_tui.Style, Int) -> @rabbita_tui.Node
+
+pub fn status_line(left~ : String, right~ : String, width~ : Int, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+
+pub fn table(columns~ : Array[TableColumn], rows~ : Array[Array[String]], selected? : Int, offset? : Int, size~ : @rabbita_tui.Size, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+
+pub fn tabs(labels~ : Array[String], active? : Int, width~ : Int, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+
+pub fn timer(remaining_ms~ : Int, width~ : Int, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+
+// Errors
+
+// Types and methods
+pub(all) struct CommandPalette {
+  input : TextInput
+  items : Array[String]
+  selected : Int
+} derive(Eq, @debug.Debug)
+pub fn CommandPalette::CommandPalette(items~ : Array[String], selected? : Int) -> Self
+pub fn CommandPalette::items(Self) -> Array[String]
+pub fn CommandPalette::selected_item(Self) -> String?
+pub fn CommandPalette::update(Self, CommandPaletteMsg) -> Self
+pub fn CommandPalette::view(Self, size~ : @rabbita_tui.Size, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+
+pub(all) enum CommandPaletteMsg {
+  CommandPaletteKey(@rabbita_tui.Key)
+  CommandPaletteSelect(Int)
+  CommandPaletteSetInput(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct KeyBinding {
+  keys : Array[@rabbita_tui.Key]
+  help : String
+} derive(Eq, @debug.Debug)
+
+pub(all) struct List {
+  items : Array[String]
+  selected : Int
+  offset : Int
+} derive(Eq, @debug.Debug)
+pub fn List::List(items~ : Array[String], selected? : Int, offset? : Int) -> Self
+pub fn List::selected_item(Self) -> String?
+pub fn List::update(Self, ListMsg) -> Self
+pub fn List::view(Self, size~ : @rabbita_tui.Size, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+
+pub(all) enum ListMsg {
+  ListMove(Int, Int)
+  ListPage(Int, Int)
+  ListSelect(Int)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct TableColumn {
+  title : String
+  width : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) struct TextInput {
+  value : String
+  cursor : Int
+  placeholder : String
+} derive(Eq, @debug.Debug)
+pub fn TextInput::TextInput(placeholder? : String, value? : String) -> Self
+pub fn TextInput::update(Self, TextInputMsg) -> Self
+pub fn TextInput::view(Self, width~ : Int, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+
+pub(all) enum TextInputMsg {
+  TextInputKey(@rabbita_tui.Key)
+  TextInputSet(String)
+  TextInputClear
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Textarea {
+  lines : Array[String]
+  row : Int
+  column : Int
+  placeholder : String
+} derive(Eq, @debug.Debug)
+pub fn Textarea::Textarea(placeholder? : String, value? : String) -> Self
+pub fn Textarea::update(Self, TextareaMsg) -> Self
+pub fn Textarea::value(Self) -> String
+pub fn Textarea::view(Self, size~ : @rabbita_tui.Size, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+
+pub(all) enum TextareaMsg {
+  TextareaKey(@rabbita_tui.Key)
+  TextareaSet(String)
+  TextareaClear
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Viewport {
+  lines : Array[String]
+  offset : Int
+} derive(Eq, @debug.Debug)
+pub fn Viewport::Viewport(lines~ : Array[String], offset? : Int) -> Self
+pub fn Viewport::update(Self, ViewportMsg) -> Self
+pub fn Viewport::view(Self, size~ : @rabbita_tui.Size, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+
+pub(all) enum ViewportMsg {
+  ViewportScroll(Int, Int)
+  ViewportJump(Int, Int)
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

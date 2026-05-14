@@ -1,0 +1,483 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/rabbita_tui"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn align(horizontal? : Align, vertical? : Align, style? : Style, Node) -> Node
+
+pub fn align_line(String, Int, Align) -> String
+
+pub fn ansi_clear_line() -> String
+
+pub fn ansi_clear_screen() -> String
+
+pub fn ansi_disable_autowrap() -> String
+
+pub fn ansi_disable_bracketed_paste() -> String
+
+pub fn ansi_disable_focus_events() -> String
+
+pub fn ansi_disable_mouse() -> String
+
+pub fn ansi_enable_autowrap() -> String
+
+pub fn ansi_enable_bracketed_paste() -> String
+
+pub fn ansi_enable_focus_events() -> String
+
+pub fn ansi_enable_mouse(MouseMode) -> String
+
+pub fn ansi_enter_alternate_screen() -> String
+
+pub fn ansi_hide_cursor() -> String
+
+pub fn ansi_leave_alternate_screen() -> String
+
+pub fn ansi_move_cursor(Int, Int) -> String
+
+pub fn ansi_move_cursor_up(Int) -> String
+
+pub fn ansi_reset() -> String
+
+pub fn ansi_set_window_title(String) -> String
+
+pub fn ansi_show_cursor() -> String
+
+pub fn ansi_start_program(ProgramOptions, Node, Size) -> String
+
+pub fn ansi_stop_program(ProgramOptions) -> String
+
+pub fn ansi_style(Style) -> String
+
+pub fn ansi_terminal_command(TerminalCommand) -> String
+
+pub fn[A, E : Error] attempt((Result[A, E]) -> Cmd, async () -> A raise E) -> Cmd
+
+pub fn batch(Array[Cmd]) -> Cmd
+
+pub fn border(kind? : Border, style? : Style, Node) -> Node
+
+pub fn[Model, Msg] cell(model~ : Model, init? : (Emit[Msg], Model) -> Cmd, update~ : (Emit[Msg], Msg, Model) -> (Cmd, Model), view~ : (Model) -> Node, subscriptions? : (Model) -> Sub[Msg]) -> Program[Model, Msg]
+
+#deprecated
+pub fn[Model, Msg] cell_with_dispatch(model~ : Model, init? : (Emit[Msg], Model) -> Cmd, update~ : (Emit[Msg], Msg, Model) -> (Cmd, Model), view~ : (Model) -> Node, subscriptions? : (Model) -> Sub[Msg]) -> (Emit[Msg], Program[Model, Msg])
+
+pub fn[Model, Msg] cell_with_emit(model~ : Model, init? : (Emit[Msg], Model) -> Cmd, update~ : (Emit[Msg], Msg, Model) -> (Cmd, Model), view~ : (Model) -> Node, subscriptions? : (Model) -> Sub[Msg]) -> (Emit[Msg], Program[Model, Msg])
+
+pub fn clip(size~ : Size, style? : Style, Node) -> Node
+
+pub fn delay(Cmd, Int) -> Cmd
+
+pub fn diff_ansi(Frame?, Frame) -> String
+
+pub fn diff_node_ansi(Frame?, Node, Size) -> (Frame, String)
+
+pub fn display_width(String) -> Int
+
+pub fn effect(async () -> Unit noraise) -> Cmd
+
+pub fn empty(style? : Style) -> Node
+
+pub fn enter_raw_mode() -> Unit raise TerminalError
+
+pub fn fill(style? : Style, String) -> Node
+
+pub fn fit_block(Array[String], Size) -> Array[String]
+
+pub fn fit_line(String, Int) -> String
+
+pub fn fit_lines(Array[String], Size) -> Array[String]
+
+pub fn fragment(style? : Style, Array[Node]) -> Node
+
+pub fn full_render_ansi(Node, Size) -> String
+
+pub fn hstack(gap? : Int, style? : Style, Array[Node]) -> Node
+
+pub fn is_tty(Int) -> Bool
+
+pub fn join_horizontal(gap? : Int, style? : Style, Array[Node]) -> Node
+
+pub fn join_vertical(gap? : Int, style? : Style, Array[Node]) -> Node
+
+pub let none : Cmd
+
+pub fn pad(edge~ : Edge, style? : Style, Node) -> Node
+
+pub fn pad_right(String, Int) -> String
+
+pub fn paint_frame_ansi(Frame) -> String
+
+pub fn parse_input(Bytes) -> Array[Event]
+
+pub fn[A] perform((A) -> Cmd, async () -> A noraise) -> Cmd
+
+pub fn place(size~ : Size, horizontal? : Align, vertical? : Align, style? : Style, Node) -> Node
+
+pub fn render_ansi(Node, Size) -> String
+
+pub fn render_plain(Node, Size) -> Array[String]
+
+pub fn repeat_to_width(String, Int) -> String
+
+pub fn restore_terminal() -> Unit
+
+pub fn[Model, Msg] simple_cell(model~ : Model, init? : (Emit[Msg], Model) -> Cmd, update~ : (Msg, Model) -> (Cmd, Model), view~ : (Model) -> Node, subscriptions? : (Model) -> Sub[Msg]) -> Program[Model, Msg]
+
+pub fn sized(width? : Int, height? : Int, style? : Style, Node) -> Node
+
+pub fn take_width(String, Int) -> String
+
+pub fn terminal_size() -> Size raise TerminalError
+
+pub fn text(style? : Style, String) -> Node
+
+pub fn vstack(gap? : Int, style? : Style, Array[Node]) -> Node
+
+pub fn wrap_text(String, Int) -> Array[String]
+
+// Errors
+pub(all) suberror TerminalError {
+  UnsupportedPlatform
+  NotATty(String)
+  NativeError(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub(all) enum Align {
+  Start
+  Center
+  End
+} derive(Eq, @debug.Debug)
+
+pub(all) enum Border {
+  NoBorder
+  Normal
+  Rounded
+  Square
+  Double
+  Thick
+} derive(Eq, @debug.Debug)
+
+pub(all) struct CancelToken {
+  mut cancelled : Bool
+} derive(@debug.Debug)
+pub fn CancelToken::cancel(Self) -> Unit
+pub fn CancelToken::is_cancelled(Self) -> Bool
+pub fn CancelToken::new() -> Self
+
+type Cmd
+pub fn[A, E : Error] Cmd::attempt((Result[A, E]) -> Self, async () -> A raise E) -> Self
+pub fn Cmd::batch(Array[Self]) -> Self
+pub fn Cmd::clear_screen() -> Self
+pub fn Cmd::delay(Int, Self) -> Self
+pub fn Cmd::disable_bracketed_paste() -> Self
+pub fn Cmd::disable_focus_events() -> Self
+pub fn Cmd::disable_mouse() -> Self
+pub fn Cmd::effect(async () -> Unit noraise) -> Self
+pub fn Cmd::enable_bracketed_paste() -> Self
+pub fn Cmd::enable_focus_events() -> Self
+pub fn Cmd::enable_mouse(MouseMode) -> Self
+pub fn Cmd::enter_alternate_screen() -> Self
+pub fn Cmd::err_log(String) -> Self
+pub fn Cmd::err_write(String) -> Self
+pub fn Cmd::every(Int, Self) -> Self
+pub fn[A] Cmd::exec((A) -> Self, async () -> A noraise) -> Self
+pub fn Cmd::exec_process(String, (Int) -> Self) -> Self
+pub fn Cmd::hide_cursor() -> Self
+pub fn Cmd::is_none(Self) -> Bool
+pub fn Cmd::leave_alternate_screen() -> Self
+pub fn Cmd::log(String) -> Self
+#deprecated
+pub fn[Msg] Cmd::message(Emit[Msg], Msg) -> Self
+pub fn Cmd::none() -> Self
+pub fn[A] Cmd::perform((A) -> Self, async () -> A noraise) -> Self
+pub fn Cmd::quit() -> Self
+pub fn Cmd::repaint() -> Self
+pub async fn Cmd::run(Self) -> Unit
+pub async fn Cmd::run_with_terminal(Self, (TerminalCommand) -> Unit) -> Unit
+pub fn Cmd::sequence(Array[Self]) -> Self
+pub fn Cmd::set_window_title(String) -> Self
+pub fn Cmd::show_cursor() -> Self
+pub fn Cmd::suspend(async () -> Self) -> Self
+pub fn Cmd::terminal(TerminalCommand) -> Self
+pub fn Cmd::terminal_commands(Self) -> Array[TerminalCommand]
+pub fn Cmd::tick(Int, Self) -> Self
+pub fn Cmd::write(String) -> Self
+
+pub(all) enum Color {
+  Default
+  Ansi(Int)
+  Rgb(Int, Int, Int)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Edge {
+  top : Int
+  right : Int
+  bottom : Int
+  left : Int
+} derive(Eq, @debug.Debug)
+pub fn Edge::all(Int) -> Self
+pub fn Edge::horizontal(Int) -> Self
+pub fn Edge::trbl(Int, Int, Int, Int) -> Self
+pub fn Edge::vertical(Int) -> Self
+pub fn Edge::xy(Int, Int) -> Self
+pub fn Edge::zero() -> Self
+
+#alias(Dispatch, deprecated)
+pub(all) struct Emit[Msg]((Msg) -> Cmd)
+pub fn[A, B] Emit::map(Self[A], (B) -> A) -> Self[B]
+pub fn[Msg] Emit::new((Msg) -> Unit) -> Self[Msg]
+pub fn[Msg] Emit::send(Self[Msg], Msg) -> Unit
+
+pub(all) enum Event {
+  Key(Key)
+  Mouse(Mouse)
+  Resize(Size)
+  FocusGained
+  FocusLost
+  Paste(String)
+  Tick(Int64)
+  Quit
+  UnknownEvent(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Frame {
+  lines : Array[String]
+} derive(Eq, @debug.Debug)
+pub fn Frame::from_node(Node, Size) -> Self
+pub fn Frame::to_string(Self) -> String
+
+pub(all) struct HeadlessOptions {
+  size : Size
+  render : Bool
+  max_steps : Int
+} derive(Eq, @debug.Debug)
+pub fn HeadlessOptions::default() -> Self
+pub fn HeadlessOptions::max_steps(Self, Int) -> Self
+pub fn HeadlessOptions::render(Self, Bool) -> Self
+pub fn HeadlessOptions::size(Self, Size) -> Self
+
+type InputDecoder derive(Eq, @debug.Debug)
+
+pub(all) enum Key {
+  Char(String)
+  Enter
+  Escape
+  Backspace
+  Tab
+  BackTab
+  Up
+  Down
+  Left
+  Right
+  Home
+  End
+  Delete
+  PageUp
+  PageDown
+  Ctrl(String)
+  Alt(String)
+  Modified(Key, KeyModifiers)
+  Function(Int)
+  Unknown(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct KeyModifiers {
+  shift : Bool
+  alt : Bool
+  ctrl : Bool
+  super_key : Bool
+  hyper : Bool
+  meta : Bool
+} derive(Eq, @debug.Debug)
+pub fn KeyModifiers::alt(Self, Bool) -> Self
+pub fn KeyModifiers::ctrl(Self, Bool) -> Self
+pub fn KeyModifiers::hyper(Self, Bool) -> Self
+pub fn KeyModifiers::meta(Self, Bool) -> Self
+pub fn KeyModifiers::none() -> Self
+pub fn KeyModifiers::shift(Self, Bool) -> Self
+pub fn KeyModifiers::super_key(Self, Bool) -> Self
+
+pub(all) struct Mouse {
+  button : MouseButton
+  action : MouseAction
+  x : Int
+  y : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) enum MouseAction {
+  Press
+  Release
+  Drag
+} derive(Eq, @debug.Debug)
+
+pub(all) enum MouseButton {
+  Primary
+  Middle
+  Secondary
+  WheelUp
+  WheelDown
+  Other(Int)
+} derive(Eq, @debug.Debug)
+
+pub(all) enum MouseMode {
+  MouseOff
+  MouseCellMotion
+  MouseButtonMotion
+  MouseAllMotion
+} derive(Eq, @debug.Debug)
+
+type Node derive(Eq, @debug.Debug)
+
+pub(all) struct Point {
+  x : Int
+  y : Int
+} derive(Eq, @debug.Debug)
+
+#alias(Cell)
+pub struct Program[Model, Msg] {
+  mut model : Model
+  init_fn : (Emit[Msg], Model) -> Cmd
+  update_fn : (Emit[Msg], Msg, Model) -> (Cmd, Model)
+  view_fn : (Model) -> Node
+  subscriptions_fn : (Model) -> Sub[Msg]
+  mut dirty : Bool
+}
+pub fn[Model, Msg] Program::handle_event(Self[Model, Msg], Emit[Msg], Event) -> Array[Cmd]
+pub fn[Model, Msg] Program::init(Self[Model, Msg], Emit[Msg]) -> Cmd
+pub fn[Model, Msg] Program::is_dirty(Self[Model, Msg]) -> Bool
+pub fn[Model, Msg] Program::mark_clean(Self[Model, Msg]) -> Unit
+pub fn[Model, Msg] Program::mark_dirty(Self[Model, Msg]) -> Unit
+pub fn[Model, Msg] Program::model(Self[Model, Msg]) -> Model
+pub async fn[Model, Msg] Program::run(Self[Model, Msg]) -> Unit raise TerminalError
+pub async fn[Model, Msg] Program::run_headless(Self[Model, Msg], events? : Array[Event], options? : HeadlessOptions) -> ProgramRunResult[Model]
+pub async fn[Model, Msg] Program::run_returning_model(Self[Model, Msg]) -> Model raise TerminalError
+pub async fn[Model, Msg] Program::run_with_cancel_token(Self[Model, Msg], ProgramOptions, CancelToken) -> Model raise TerminalError
+pub async fn[Model, Msg] Program::run_with_options(Self[Model, Msg], ProgramOptions) -> Unit raise TerminalError
+pub async fn[Model, Msg] Program::run_with_options_returning_model(Self[Model, Msg], ProgramOptions) -> Model raise TerminalError
+pub async fn[Model, Msg] Program::run_with_timeout(Self[Model, Msg], ProgramOptions, Int) -> Model raise TerminalError
+pub fn[Model, Msg] Program::step(Self[Model, Msg], Emit[Msg], Msg) -> Cmd
+pub fn[Model, Msg] Program::subscriptions(Self[Model, Msg]) -> Sub[Msg]
+pub fn[Model, Msg] Program::view(Self[Model, Msg]) -> Node
+
+pub(all) struct ProgramOptions {
+  alternate_screen : Bool
+  mouse_mode : MouseMode
+  bracketed_paste : Bool
+  focus_events : Bool
+  hide_cursor : Bool
+  renderer_enabled : Bool
+  renderer_fps : Int
+  max_messages_per_frame : Int
+  resize_poll_millis : Int
+} derive(Eq, @debug.Debug)
+pub fn ProgramOptions::alternate_screen(Self, Bool) -> Self
+pub fn ProgramOptions::bracketed_paste(Self, Bool) -> Self
+pub fn ProgramOptions::default() -> Self
+pub fn ProgramOptions::focus_events(Self, Bool) -> Self
+pub fn ProgramOptions::fps(Self, Int) -> Self
+pub fn ProgramOptions::hide_cursor(Self, Bool) -> Self
+pub fn ProgramOptions::inline() -> Self
+pub fn ProgramOptions::max_messages_per_frame(Self, Int) -> Self
+pub fn ProgramOptions::mouse(Self, MouseMode) -> Self
+pub fn ProgramOptions::renderer(Self, Bool) -> Self
+pub fn ProgramOptions::resize_poll_millis(Self, Int) -> Self
+pub fn ProgramOptions::without_renderer(Self) -> Self
+
+pub(all) struct ProgramRunResult[Model] {
+  model : Model
+  terminal_commands : Array[TerminalCommand]
+  frames : Array[Frame]
+  quit : Bool
+  steps : Int
+  limit_reached : Bool
+}
+
+pub(all) struct Size {
+  width : Int
+  height : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Style {
+  fg : Color
+  bg : Color
+  bold : Bool
+  dim : Bool
+  italic : Bool
+  underline : Bool
+  blink : Bool
+  reverse : Bool
+  strikethrough : Bool
+  width : Int
+  height : Int
+  padding : Edge
+  border : Border
+  align_horizontal : Align
+  align_vertical : Align
+  align_set : Bool
+  clip_width : Int
+  clip_height : Int
+} derive(Eq, @debug.Debug)
+pub fn Style::align(Self, horizontal? : Align, vertical? : Align) -> Self
+pub fn Style::bg(Self, Color) -> Self
+pub fn Style::blink(Self) -> Self
+pub fn Style::bold(Self) -> Self
+pub fn Style::border(Self, kind? : Border) -> Self
+pub fn Style::clip(Self, Size) -> Self
+pub fn Style::default() -> Self
+pub fn Style::dim(Self) -> Self
+pub fn Style::fg(Self, Color) -> Self
+pub fn Style::height(Self, Int) -> Self
+pub fn Style::italic(Self) -> Self
+pub fn Style::merge(Self, Self) -> Self
+pub fn Style::padding(Self, Edge) -> Self
+pub fn Style::reverse(Self) -> Self
+pub fn Style::size(Self, width? : Int, height? : Int) -> Self
+pub fn Style::strikethrough(Self) -> Self
+pub fn Style::underline(Self) -> Self
+pub fn Style::width(Self, Int) -> Self
+
+type Sub[Msg]
+pub fn[Msg] Sub::batch(Array[Self[Msg]]) -> Self[Msg]
+pub fn[Msg] Sub::event((Event) -> Msg) -> Self[Msg]
+pub fn[Msg] Sub::focus((Event) -> Msg) -> Self[Msg]
+pub fn[Msg] Sub::focus_changes((Bool) -> Msg) -> Self[Msg]
+pub fn[Msg] Sub::keyboard((Event) -> Msg) -> Self[Msg]
+pub fn[Msg] Sub::keys((Key) -> Msg) -> Self[Msg]
+pub fn[Msg] Sub::map_event(Self[Msg], Event) -> Array[Msg]
+pub fn[Msg] Sub::mouse((Event) -> Msg) -> Self[Msg]
+pub fn[Msg] Sub::mouse_events((Mouse) -> Msg) -> Self[Msg]
+pub fn[Msg] Sub::none() -> Self[Msg]
+pub fn[Msg] Sub::paste((String) -> Msg) -> Self[Msg]
+pub fn[Msg] Sub::resize((Size) -> Msg) -> Self[Msg]
+pub fn[Msg] Sub::tick(Int, Msg) -> Self[Msg]
+
+pub(all) enum TerminalCommand {
+  QuitProgram
+  Repaint
+  Print(String)
+  PrintLine(String)
+  PrintErr(String)
+  PrintErrLine(String)
+  ClearScreen
+  EnterAlternateScreen
+  LeaveAlternateScreen
+  HideCursor
+  ShowCursor
+  EnableMouse(MouseMode)
+  DisableMouse
+  EnableBracketedPaste
+  DisableBracketedPaste
+  EnableFocusEvents
+  DisableFocusEvents
+  SetWindowTitle(String)
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

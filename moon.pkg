@@ -1,0 +1,17 @@
+import {
+  "moonbitlang/core/string" @string,
+  "moonbitlang/core/encoding/utf8" @encoding/utf8,
+  "moonbitlang/async" @async,
+  "moonbitlang/async/aqueue" @aqueue,
+  "moonbitlang/async/stdio" @stdio,
+}
+
+import {
+  "moonbitlang/core/debug" @debug,
+} for "test"
+
+supported_targets = "+native"
+
+options(
+  "native-stub": [ "terminal_posix.c" ],
+)

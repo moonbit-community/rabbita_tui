@@ -1,0 +1,16 @@
+import {
+  "moonbit-community/rabbita_tui" @tui,
+  "moonbit-community/rabbita_tui/widgets" @widgets,
+  "moonbitlang/async",
+  "moonbitlang/core/immut/vector" @vector,
+}
+
+import {
+  "moonbitlang/core/debug" @debug,
+} for "wbtest"
+
+supported_targets = "+native"
+
+options(
+  "is-main": true,
+)

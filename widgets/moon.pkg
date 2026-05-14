@@ -1,0 +1,9 @@
+import {
+  "moonbit-community/rabbita_tui" @tui,
+}
+
+import {
+  "moonbitlang/core/debug" @debug,
+} for "wbtest"
+
+supported_targets = "+native"

@@ -1,0 +1,20 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/rabbita_tui/examples/runtime-lab"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+type LabModel derive(Eq, @debug.Debug)
+
+type LabMsg derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+
