@@ -34,8 +34,16 @@ extern "C" fn tui_install_resize_handler() -> Unit = "moonbit_tui_install_resize
 
 ///|
 #cfg(not(platform="windows"))
-#borrow(bytes)
-extern "C" fn tui_system(bytes : Bytes, offset : Int, len : Int) -> Int = "moonbit_tui_system"
+#borrow(command, args)
+extern "C" fn tui_exec_process(
+  command : Bytes,
+  command_offset : Int,
+  command_len : Int,
+  args : Bytes,
+  args_offset : Int,
+  args_len : Int,
+  argc : Int,
+) -> Int = "moonbit_tui_exec_process"
 
 ///|
 #coverage.skip
@@ -134,7 +142,7 @@ pub async fn[Model, Msg] Program::run_with_options_returning_model(
   self : Program[Model, Msg],
   options : ProgramOptions,
 ) -> Model raise TerminalError {
-  self.run_with_runtime_control(options, None, 0)
+  self.run_with_runtime_control(options, None, 0).model
 }
 
 ///|
@@ -144,7 +152,7 @@ pub async fn[Model, Msg] Program::run_with_cancel_token(
   options : ProgramOptions,
   token : CancelToken,
 ) -> Model raise TerminalError {
-  self.run_with_runtime_control(options, Some(token), 0)
+  self.run_with_cancel_token_result(options, token).model
 }
 
 ///|
@@ -154,7 +162,44 @@ pub async fn[Model, Msg] Program::run_with_timeout(
   options : ProgramOptions,
   milliseconds : Int,
 ) -> Model raise TerminalError {
+  self.run_with_timeout_result(options, milliseconds).model
+}
+
+///|
+#coverage.skip
+pub async fn[Model, Msg] Program::run_with_options_result(
+  self : Program[Model, Msg],
+  options : ProgramOptions,
+) -> ProgramRuntimeResult[Model] raise TerminalError {
+  self.run_with_runtime_control(options, None, 0)
+}
+
+///|
+#coverage.skip
+pub async fn[Model, Msg] Program::run_with_cancel_token_result(
+  self : Program[Model, Msg],
+  options : ProgramOptions,
+  token : CancelToken,
+) -> ProgramRuntimeResult[Model] raise TerminalError {
+  self.run_with_runtime_control(options, Some(token), 0)
+}
+
+///|
+#coverage.skip
+pub async fn[Model, Msg] Program::run_with_timeout_result(
+  self : Program[Model, Msg],
+  options : ProgramOptions,
+  milliseconds : Int,
+) -> ProgramRuntimeResult[Model] raise TerminalError {
   self.run_with_runtime_control(options, None, milliseconds)
+}
+
+///|
+#coverage.skip
+priv struct RuntimeState {
+  mut previous : StyledFrame?
+  mut current_size : Size
+  mut exit : ProgramExit
 }
 
 ///|
@@ -164,15 +209,19 @@ async fn[Model, Msg] Program::run_with_runtime_control(
   options : ProgramOptions,
   cancel_token : CancelToken?,
   timeout_millis : Int,
-) -> Model raise TerminalError {
+) -> ProgramRuntimeResult[Model] raise TerminalError {
   enter_raw_mode()
   defer restore_terminal()
-  let mut current_size = terminal_size()
+  let state : RuntimeState = {
+    previous: None,
+    current_size: terminal_size(),
+    exit: ProgramQuit,
+  }
   let queue = @aqueue.Queue::new(kind=Unbounded)
   let emit = Emit::new(msg => {
     ignore(queue.try_put(RuntimeMsg(msg)) catch { _ => false })
   })
-  for cmd in self.handle_event(emit, Resize(current_size)) {
+  for cmd in self.handle_event(emit, Resize(state.current_size)) {
     cmd.run_with_terminal(command => {
       ignore(queue.try_put(RuntimeTerminal(command)) catch { _ => false })
     }) catch {
@@ -186,14 +235,18 @@ async fn[Model, Msg] Program::run_with_runtime_control(
   }) catch {
     err => raise NativeError(err.to_string())
   }
-  let mut previous : StyledFrame? = None
   if options.renderer_enabled {
     let initial_view = self.view()
-    let initial_frame = StyledFrame::from_node(initial_view, current_size)
+    let initial_frame = StyledFrame::from_node(initial_view, state.current_size)
     write_terminal(
-      start_program_output(options, initial_view, current_size, initial_frame),
+      start_program_output(
+        options,
+        initial_view,
+        state.current_size,
+        initial_frame,
+      ),
     )
-    previous = Some(initial_frame)
+    state.previous = Some(initial_frame)
   } else {
     write_terminal(start_program_control_output(options))
   }
@@ -205,9 +258,8 @@ async fn[Model, Msg] Program::run_with_runtime_control(
     })
     group.spawn_bg(no_wait=true, allow_failure=true, () => {
       watch_terminal_resize(
-        self,
         queue,
-        current_size,
+        state.current_size,
         options.resize_poll_millis,
       )
     })
@@ -226,33 +278,47 @@ async fn[Model, Msg] Program::run_with_runtime_control(
           while !token.is_cancelled() {
             @async.sleep(16)
           }
-          group.return_immediately(())
+          queue.put(RuntimeCancel)
         })
       None => ()
     }
     if timeout_millis > 0 {
       group.spawn_bg(no_wait=true, allow_failure=true, () => {
         @async.sleep(timeout_millis)
-        group.return_immediately(())
+        queue.put(RuntimeTimeout)
       })
     }
     while true {
       let item = queue.get()
-      let mut render_due = options.renderer_fps <= 0 || item is RuntimeRender
-      if handle_runtime_item(self, emit, queue, group, item, options, previous) {
-        group.return_immediately(())
+      let mut render_due = options.renderer_fps <= 0 ||
+        item is RuntimeRender ||
+        item is RuntimeResize(_)
+      match
+        handle_runtime_item(self, emit, queue, group, item, options, state) {
+        Some(exit) => {
+          state.exit = exit
+          group.return_immediately(())
+          break
+        }
+        None => ()
       }
       let mut drained = 0
       while drained < options.max_messages_per_frame {
         match (queue.try_get() catch { _ => None }) {
           Some(item) => {
-            if item is RuntimeRender {
+            if item is RuntimeRender || item is RuntimeResize(_) {
               render_due = true
             }
-            if handle_runtime_item(
-                self, emit, queue, group, item, options, previous,
+            match
+              handle_runtime_item(
+                self, emit, queue, group, item, options, state,
               ) {
-              group.return_immediately(())
+              Some(exit) => {
+                state.exit = exit
+                group.return_immediately(())
+                break
+              }
+              None => ()
             }
             drained += 1
           }
@@ -262,18 +328,18 @@ async fn[Model, Msg] Program::run_with_runtime_control(
       if self.is_dirty() && render_due {
         if options.renderer_enabled {
           let next_size = terminal_size()
-          let resized = next_size != current_size
-          current_size = next_size
-          let next = StyledFrame::from_node(self.view(), current_size)
+          let resized = next_size != state.current_size
+          state.current_size = next_size
+          let next = StyledFrame::from_node(self.view(), state.current_size)
           let output = if resized {
             repaint_resized_frame(next)
           } else {
-            frame_update_output(options, previous, next)
+            frame_update_output(options, state.previous, next)
           }
           write_terminal(output)
-          previous = Some(next)
+          state.previous = Some(next)
         } else {
-          current_size = terminal_size() catch { _ => current_size }
+          state.current_size = terminal_size() catch { _ => state.current_size }
         }
         self.mark_clean()
       }
@@ -283,7 +349,7 @@ async fn[Model, Msg] Program::run_with_runtime_control(
     err => raise NativeError(err.to_string())
   }
   write_terminal(stop_program_output(options))
-  self.model()
+  { model: self.model(), exit: state.exit }
 }
 
 ///|
@@ -292,6 +358,9 @@ priv enum RuntimeItem[Msg] {
   RuntimeMsg(Msg)
   RuntimeTerminal(TerminalCommand)
   RuntimeRender
+  RuntimeResize(Size)
+  RuntimeCancel
+  RuntimeTimeout
 }
 
 ///|
@@ -396,16 +465,28 @@ fn repaint_resized_frame(frame : StyledFrame) -> String {
 fn safe_terminal_command_output(
   command : TerminalCommand,
   options : ProgramOptions,
-  previous : StyledFrame?,
+  state : RuntimeState,
+  fd~ : Int,
 ) -> String {
+  if fd == 2 && !is_tty(2) {
+    return raw_terminal_command_output(command)
+  }
   match command {
-    Print(value) => safe_print_output(value, newline=false, options, previous)
-    PrintLine(value) =>
-      safe_print_output(value, newline=true, options, previous)
-    PrintErr(value) =>
-      safe_print_output(value, newline=false, options, previous)
+    Print(value) => safe_print_output(value, newline=false, options, state)
+    PrintLine(value) => safe_print_output(value, newline=true, options, state)
+    PrintErr(value) => safe_print_output(value, newline=false, options, state)
     PrintErrLine(value) =>
-      safe_print_output(value, newline=true, options, previous)
+      safe_print_output(value, newline=true, options, state)
+    _ => ansi_terminal_command(command)
+  }
+}
+
+///|
+#coverage.skip
+fn raw_terminal_command_output(command : TerminalCommand) -> String {
+  match command {
+    Print(value) | PrintErr(value) => value
+    PrintLine(value) | PrintErrLine(value) => "\{value}\n"
     _ => ansi_terminal_command(command)
   }
 }
@@ -425,17 +506,24 @@ fn safe_print_output(
   value : String,
   newline~ : Bool,
   options : ProgramOptions,
-  previous : StyledFrame?,
+  state : RuntimeState,
 ) -> String {
   if !options.renderer_enabled {
     return if newline { "\{value}\r\n" } else { value }
   }
-  match previous {
+  match state.previous {
     None => if newline { "\{value}\r\n" } else { value }
     Some(frame) => {
       let out = StringBuilder::new()
       if options.alternate_screen {
-        out.write_string(ansi_move_cursor(1, 1))
+        out.write_string(ansi_leave_alternate_screen())
+        write_safe_print_text(out, value, newline)
+        out.write_string(ansi_enter_alternate_screen())
+        out.write_string(
+          start_program_control_output({ ..options, alternate_screen: false }),
+        )
+        out.write_string(paint_styled_frame_ansi(frame))
+        return out.to_string()
       } else if frame.lines.length() > 0 {
         out.write_string(ansi_move_cursor_up(frame.lines.length() - 1))
       }
@@ -483,15 +571,26 @@ fn split_safe_print(value : String) -> Array[String] {
   let mut index = 0
   while index < value.length() {
     if value.code_unit_at(index) == Int::to_uint16('\n'.to_int()) {
-      lines.push(value[start:index].to_owned())
+      lines.push(trim_safe_print_cr(value[start:index].to_owned()))
       start = index + 1
     }
     index += 1
   }
   if start < value.length() {
-    lines.push(value[start:].to_owned())
+    lines.push(trim_safe_print_cr(value[start:].to_owned()))
   }
   lines
+}
+
+///|
+#coverage.skip
+fn trim_safe_print_cr(value : String) -> String {
+  if value.length() > 0 &&
+    value.code_unit_at(value.length() - 1) == Int::to_uint16('\r'.to_int()) {
+    value[:value.length() - 1].to_owned()
+  } else {
+    value
+  }
 }
 
 ///|
@@ -503,16 +602,26 @@ async fn[Model, Msg] handle_runtime_item(
   group : @async.TaskGroup[Unit],
   item : RuntimeItem[Msg],
   options : ProgramOptions,
-  previous : StyledFrame?,
-) -> Bool {
+  state : RuntimeState,
+) -> ProgramExit? {
   match item {
     RuntimeMsg(msg) => {
-      handle_runtime_msg(program, emit, queue, group, msg, options, previous)
-      false
+      handle_runtime_msg(program, emit, queue, group, msg, options, state)
+      None
     }
     RuntimeTerminal(command) =>
-      handle_terminal_command(command, program, options, previous)
-    RuntimeRender => false
+      handle_terminal_command(command, program, options, state)
+    RuntimeRender => None
+    RuntimeResize(size) => {
+      state.current_size = size
+      program.mark_dirty()
+      for msg in program.subscriptions().map_event(Resize(size)) {
+        queue.put(RuntimeMsg(msg))
+      }
+      None
+    }
+    RuntimeCancel => Some(ProgramCancelled)
+    RuntimeTimeout => Some(ProgramTimedOut)
   }
 }
 
@@ -525,14 +634,14 @@ async fn[Model, Msg] handle_runtime_msg(
   group : @async.TaskGroup[Unit],
   msg : Msg,
   options : ProgramOptions,
-  previous : StyledFrame?,
+  state : RuntimeState,
 ) -> Unit {
   let cmd = program.step(emit, msg)
   if cmd_needs_suspension(cmd) {
-    run_runtime_cmd(program, cmd, queue, group, options, previous)
+    run_runtime_cmd(program, cmd, queue, group, options, state)
   } else {
     group.spawn_bg(no_wait=true, allow_failure=true, () => {
-      run_runtime_cmd(program, cmd, queue, group, options, previous)
+      run_runtime_cmd(program, cmd, queue, group, options, state)
     })
   }
 }
@@ -541,7 +650,7 @@ async fn[Model, Msg] handle_runtime_msg(
 #coverage.skip
 fn cmd_needs_suspension(cmd : Cmd) -> Bool {
   match cmd {
-    CmdSuspend(_) | CmdExecProcess(_) => true
+    CmdSuspend(_) | CmdExecProcess(_, _, _) => true
     CmdBatch(cmds) | CmdSequence(cmds) => {
       for child in cmds {
         if cmd_needs_suspension(child) {
@@ -562,7 +671,7 @@ async fn[Model, Msg] run_runtime_cmd(
   queue : @aqueue.Queue[RuntimeItem[Msg]],
   group : @async.TaskGroup[Unit],
   options : ProgramOptions,
-  previous : StyledFrame?,
+  state : RuntimeState,
 ) -> Unit {
   match cmd {
     NoCmd => ()
@@ -571,29 +680,36 @@ async fn[Model, Msg] run_runtime_cmd(
       @async.with_task_group(batch => {
         for child in cmds {
           batch.spawn_bg(() => {
-            run_runtime_cmd(program, child, queue, group, options, previous)
+            run_runtime_cmd(program, child, queue, group, options, state)
           })
         }
       })
     CmdSequence(cmds) =>
       for child in cmds {
-        run_runtime_cmd(program, child, queue, group, options, previous)
+        run_runtime_cmd(program, child, queue, group, options, state)
       }
     CmdDelay(milliseconds, cmd) => {
-      @async.sleep(milliseconds)
-      run_runtime_cmd(program, cmd, queue, group, options, previous)
+      @async.sleep(Int::max(1, milliseconds))
+      run_runtime_cmd(program, cmd, queue, group, options, state)
+    }
+    CmdEvery(milliseconds, cmd) => {
+      let interval = Int::max(1, milliseconds)
+      while true {
+        @async.sleep(interval)
+        run_runtime_cmd(program, cmd, queue, group, options, state)
+      }
     }
     CmdTask(task) => {
       let next = task()
-      run_runtime_cmd(program, next, queue, group, options, previous)
+      run_runtime_cmd(program, next, queue, group, options, state)
     }
     CmdSuspend(task) => {
-      let next = run_suspended_task(program, options, previous, task)
-      run_runtime_cmd(program, next, queue, group, options, previous)
+      let next = run_suspended_task(program, options, state, task)
+      run_runtime_cmd(program, next, queue, group, options, state)
     }
-    CmdExecProcess(command, done) => {
-      let status = run_suspended_process(program, options, previous, command)
-      run_runtime_cmd(program, done(status), queue, group, options, previous)
+    CmdExecProcess(command, args, done) => {
+      let status = run_suspended_process(program, options, state, command, args)
+      run_runtime_cmd(program, done(status), queue, group, options, state)
     }
     CmdTerminal(command) => queue.put(RuntimeTerminal(command))
   }
@@ -604,17 +720,19 @@ async fn[Model, Msg] run_runtime_cmd(
 async fn[Model, Msg] run_suspended_task(
   program : Program[Model, Msg],
   options : ProgramOptions,
-  previous : StyledFrame?,
+  state : RuntimeState,
   task : async () -> Cmd,
 ) -> Cmd raise TerminalError {
-  suspend_terminal(options, previous)
+  suspend_terminal(options, state)
   let msg = task() catch {
     err => {
-      resume_terminal(program, options)
+      resume_terminal(program, options, state) catch {
+        _ => ()
+      }
       raise NativeError(err.to_string())
     }
   }
-  resume_terminal(program, options)
+  resume_terminal(program, options, state)
   msg
 }
 
@@ -623,17 +741,20 @@ async fn[Model, Msg] run_suspended_task(
 fn[Model, Msg] run_suspended_process(
   program : Program[Model, Msg],
   options : ProgramOptions,
-  previous : StyledFrame?,
+  state : RuntimeState,
   command : String,
+  args : Array[String],
 ) -> Int raise TerminalError {
-  suspend_terminal(options, previous)
-  let status = run_system(command) catch {
+  suspend_terminal(options, state)
+  let status = run_process(command, args) catch {
     err => {
-      resume_terminal(program, options)
+      resume_terminal(program, options, state) catch {
+        _ => ()
+      }
       raise err
     }
   }
-  resume_terminal(program, options)
+  resume_terminal(program, options, state)
   status
 }
 
@@ -641,16 +762,25 @@ fn[Model, Msg] run_suspended_process(
 #coverage.skip
 fn suspend_terminal(
   options : ProgramOptions,
-  previous : StyledFrame?,
+  state : RuntimeState,
 ) -> Unit raise TerminalError {
-  match previous {
+  let output = StringBuilder::new()
+  match state.previous {
     Some(frame) if options.renderer_enabled =>
       if !options.alternate_screen && frame.lines.length() > 0 {
-        write_terminal("\{ansi_move_cursor_up(frame.lines.length() - 1)}\r")
+        output.write_string(
+          "\{ansi_move_cursor_up(frame.lines.length() - 1)}\r",
+        )
       }
     _ => ()
   }
-  write_terminal(stop_program_output(options))
+  output.write_string(stop_program_output(options))
+  write_terminal(output.to_string()) catch {
+    err => {
+      restore_terminal()
+      raise err
+    }
+  }
   restore_terminal()
 }
 
@@ -659,6 +789,7 @@ fn suspend_terminal(
 fn[Model, Msg] resume_terminal(
   program : Program[Model, Msg],
   options : ProgramOptions,
+  state : RuntimeState,
 ) -> Unit raise TerminalError {
   enter_raw_mode()
   if options.renderer_enabled {
@@ -666,17 +797,33 @@ fn[Model, Msg] resume_terminal(
     let view = program.view()
     let frame = StyledFrame::from_node(view, size)
     write_terminal(start_program_output(options, view, size, frame))
+    state.current_size = size
+    state.previous = Some(frame)
   } else {
     write_terminal(start_program_control_output(options))
+    state.current_size = terminal_size() catch { _ => state.current_size }
+    state.previous = None
   }
 }
 
 ///|
 #coverage.skip
 #cfg(not(platform="windows"))
-fn run_system(command : String) -> Int raise TerminalError {
+fn run_process(
+  command : String,
+  args : Array[String],
+) -> Int raise TerminalError {
   let bytes = @encoding/utf8.encode(command)
-  let status = tui_system(bytes, 0, bytes.length())
+  let packed_args = pack_exec_args(args)
+  let status = tui_exec_process(
+    bytes,
+    0,
+    bytes.length(),
+    packed_args,
+    0,
+    packed_args.length(),
+    args.length(),
+  )
   if status < 0 {
     raise NativeError("failed to execute process: \{command}")
   }
@@ -686,9 +833,26 @@ fn run_system(command : String) -> Int raise TerminalError {
 ///|
 #coverage.skip
 #cfg(platform="windows")
-fn run_system(command : String) -> Int raise TerminalError {
+fn run_process(
+  command : String,
+  args : Array[String],
+) -> Int raise TerminalError {
   ignore(command)
+  ignore(args)
   raise UnsupportedPlatform
+}
+
+///|
+#coverage.skip
+fn pack_exec_args(args : Array[String]) -> Bytes {
+  let out = StringBuilder::new()
+  for index, arg in args {
+    if index > 0 {
+      out.write_char('\u{00}')
+    }
+    out.write_string(arg)
+  }
+  @encoding/utf8.encode(out.to_string())
 }
 
 ///|
@@ -697,31 +861,31 @@ fn[Model, Msg] handle_terminal_command(
   command : TerminalCommand,
   program : Program[Model, Msg],
   options : ProgramOptions,
-  previous : StyledFrame?,
-) -> Bool raise TerminalError {
+  state : RuntimeState,
+) -> ProgramExit? raise TerminalError {
   match command {
-    QuitProgram => true
+    QuitProgram => Some(ProgramQuit)
     Repaint => {
       program.mark_dirty()
-      false
+      None
     }
     _ => {
+      let fd = terminal_command_fd(command)
       write_terminal_fd(
-        terminal_command_fd(command),
-        safe_terminal_command_output(command, options, previous),
+        fd,
+        safe_terminal_command_output(command, options, state, fd~),
       )
       if command is ClearScreen {
         program.mark_dirty()
       }
-      false
+      None
     }
   }
 }
 
 ///|
 #coverage.skip
-async fn[Model, Msg] watch_terminal_resize(
-  program : Program[Model, Msg],
+async fn[Msg] watch_terminal_resize(
   queue : @aqueue.Queue[RuntimeItem[Msg]],
   initial_size : Size,
   poll_millis : Int,
@@ -732,9 +896,7 @@ async fn[Model, Msg] watch_terminal_resize(
     let next = terminal_size() catch { _ => last }
     if next != last {
       last = next
-      for msg in program.subscriptions().map_event(Resize(next)) {
-        queue.put(RuntimeMsg(msg))
-      }
+      queue.put(RuntimeResize(next))
     }
   }
 }
@@ -780,13 +942,10 @@ async fn[Model, Msg] dispatch_input_events(
   group : @async.TaskGroup[Unit],
   events : Array[Event],
 ) -> Unit {
+  ignore(group)
   for event in events {
-    match event {
-      Key(Ctrl("c")) | Quit => group.return_immediately(())
-      _ =>
-        for msg in program.subscriptions().map_event(event) {
-          queue.put(RuntimeMsg(msg))
-        }
+    for msg in program.subscriptions().map_event(event) {
+      queue.put(RuntimeMsg(msg))
     }
   }
 }

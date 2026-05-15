@@ -167,6 +167,16 @@ test "style layout composes size padding and border" {
   @debug.assert_eq(render_plain(node, { width: 9, height: 5 }), [
     "+-------+", "|       |", "| x     |", "|       |", "+-------+",
   ])
+  @debug.assert_eq(
+    render_plain(
+      text(
+        style=Style::default().size(width=5, height=3).border(kind=Square),
+        "x",
+      ),
+      { width: 5, height: 3 },
+    ),
+    ["+---+", "|x  |", "+---+"],
+  )
 }
 
 ///|
@@ -221,6 +231,12 @@ test "frame diff only rewrites changed lines" {
   assert_true(diff.contains("\u{1b}[3;1Hlo\u{1b}[K"))
   assert_true(!diff.contains("\u{1b}[1;1H"))
   assert_true(diff_ansi(None, next).has_prefix("\u{1b}[1;1H"))
+  let (_, styled_diff) = diff_node_ansi(
+    Some(Frame::from_node(text("same"), { width: 6, height: 1 })),
+    text(style=Style::default().fg(Ansi(1)), "same"),
+    { width: 6, height: 1 },
+  )
+  assert_true(styled_diff.contains("\u{1b}[31m"))
 }
 
 ///|

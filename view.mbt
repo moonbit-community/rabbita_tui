@@ -5,7 +5,7 @@ pub fn empty(style? : Style = Style::default()) -> Node {
 
 ///|
 pub fn text(style? : Style = Style::default(), value : String) -> Node {
-  Text(value, style)
+  apply_layout_style(Text(value, style_text(style)), style)
 }
 
 ///|
@@ -122,6 +122,12 @@ fn apply_style(node : Node, style : Style) -> Node {
   if text_style != Style::default() {
     out = Styled(out, text_style)
   }
+  apply_layout_style(out, style)
+}
+
+///|
+fn apply_layout_style(node : Node, style : Style) -> Node {
+  let mut out = node
   if style.padding != Edge::zero() {
     out = Pad(out, style.padding)
   }

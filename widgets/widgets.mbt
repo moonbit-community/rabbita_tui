@@ -32,25 +32,27 @@ pub fn TextInput::TextInput(
   placeholder? : String = "",
   value? : String = "",
 ) -> TextInput {
-  { value, cursor: value.length(), placeholder }
+  { value, cursor: char_count(value), placeholder }
 }
 
 ///|
 fn insert_text_input(input : TextInput, text : String) -> TextInput {
-  let cursor = clamp(0, input.value.length(), input.cursor)
-  let value = "\{input.value[:cursor].to_owned()}\{text}\{input.value[cursor:].to_owned()}"
-  { ..input, value, cursor: cursor + text.length() }
+  let cursor = clamp(0, char_count(input.value), input.cursor)
+  let (left, right) = split_at_chars(input.value, cursor)
+  let value = "\{left}\{text}\{right}"
+  { ..input, value, cursor: cursor + char_count(text) }
 }
 
 ///|
 fn backspace_text_input(input : TextInput) -> TextInput {
-  let cursor = clamp(0, input.value.length(), input.cursor)
+  let cursor = clamp(0, char_count(input.value), input.cursor)
   if cursor == 0 {
     input
   } else {
+    let (left, right) = split_at_chars(input.value, cursor)
     {
       ..input,
-      value: "\{input.value[:cursor - 1].to_owned()}\{input.value[cursor:].to_owned()}",
+      value: "\{take_chars(left, cursor - 1)}\{right}",
       cursor: cursor - 1,
     }
   }
@@ -58,15 +60,14 @@ fn backspace_text_input(input : TextInput) -> TextInput {
 
 ///|
 fn delete_text_input(input : TextInput) -> TextInput {
-  let cursor = clamp(0, input.value.length(), input.cursor)
-  if cursor >= input.value.length() {
+  let count = char_count(input.value)
+  let cursor = clamp(0, count, input.cursor)
+  if cursor >= count {
     input
   } else {
-    {
-      ..input,
-      value: "\{input.value[:cursor].to_owned()}\{input.value[cursor + 1:].to_owned()}",
-      cursor,
-    }
+    let (left, rest) = split_at_chars(input.value, cursor)
+    let (_, right) = split_at_chars(rest, 1)
+    { ..input, value: "\{left}\{right}", cursor }
   }
 }
 
@@ -77,7 +78,7 @@ fn move_text_input_left(input : TextInput) -> TextInput {
 
 ///|
 fn move_text_input_right(input : TextInput) -> TextInput {
-  { ..input, cursor: Int::min(input.value.length(), input.cursor + 1) }
+  { ..input, cursor: Int::min(char_count(input.value), input.cursor + 1) }
 }
 
 ///|
@@ -89,7 +90,7 @@ fn update_text_input(input : TextInput, key : Key) -> TextInput {
     Left => move_text_input_left(input)
     Right => move_text_input_right(input)
     Home => { ..input, cursor: 0 }
-    End => { ..input, cursor: input.value.length() }
+    End => { ..input, cursor: char_count(input.value) }
     _ => input
   }
 }
@@ -98,7 +99,7 @@ fn update_text_input(input : TextInput, key : Key) -> TextInput {
 pub fn TextInput::update(self : TextInput, msg : TextInputMsg) -> TextInput {
   match msg {
     TextInputKey(key) => update_text_input(self, key)
-    TextInputSet(value) => { ..self, value, cursor: value.length() }
+    TextInputSet(value) => { ..self, value, cursor: char_count(value) }
     TextInputClear => { ..self, value: "", cursor: 0 }
   }
 }
@@ -110,14 +111,12 @@ pub fn TextInput::view(
   style? : Style = Style::default(),
 ) -> Node {
   let shown = if self.value == "" { self.placeholder } else { self.value }
-  let cursor = clamp(0, shown.length(), self.cursor)
-  let left = take_width(shown, cursor)
-  let right = if cursor < shown.length() {
-    shown[cursor:].to_owned()
+  let cursor = if self.value == "" {
+    0
   } else {
-    ""
+    clamp(0, char_count(shown), self.cursor)
   }
-  text(style~, fit_line("\{left}█\{right}", width))
+  text(style~, fit_line(line_with_cursor(shown, cursor, width), width))
 }
 
 ///|
@@ -147,7 +146,7 @@ pub fn Textarea::Textarea(
 fn set_textarea(area : Textarea, value : String) -> Textarea {
   let lines = split_widget_lines(value)
   let last = Int::max(0, lines.length() - 1)
-  { ..area, lines, row: last, column: lines[last].length() }
+  { ..area, lines, row: last, column: char_count(lines[last]) }
 }
 
 ///|
@@ -175,23 +174,25 @@ fn insert_textarea(area : Textarea, value : String) -> Textarea {
   }
   let row = clamp(0, area.lines.length() - 1, area.row)
   let current = area.lines[row]
-  let column = clamp(0, current.length(), area.column)
+  let column = clamp(0, char_count(current), area.column)
   let lines = area.lines.copy()
-  lines[row] = "\{current[:column].to_owned()}\{value}\{current[column:].to_owned()}"
-  { ..area, lines, row, column: column + value.length() }
+  let (left, right) = split_at_chars(current, column)
+  lines[row] = "\{left}\{value}\{right}"
+  { ..area, lines, row, column: column + char_count(value) }
 }
 
 ///|
 fn newline_textarea(area : Textarea) -> Textarea {
   let row = clamp(0, area.lines.length() - 1, area.row)
   let current = area.lines[row]
-  let column = clamp(0, current.length(), area.column)
+  let column = clamp(0, char_count(current), area.column)
   let lines : Array[String] = []
   for index in 0..<row {
     lines.push(area.lines[index])
   }
-  lines.push(current[:column].to_owned())
-  lines.push(current[column:].to_owned())
+  let (left, right) = split_at_chars(current, column)
+  lines.push(left)
+  lines.push(right)
   let start = row + 1
   for index in start..<area.lines.length() {
     lines.push(area.lines[index])
@@ -203,10 +204,11 @@ fn newline_textarea(area : Textarea) -> Textarea {
 fn backspace_textarea(area : Textarea) -> Textarea {
   let row = clamp(0, area.lines.length() - 1, area.row)
   let current = area.lines[row]
-  let column = clamp(0, current.length(), area.column)
+  let column = clamp(0, char_count(current), area.column)
   if column > 0 {
     let lines = area.lines.copy()
-    lines[row] = "\{current[:column - 1].to_owned()}\{current[column:].to_owned()}"
+    let (left, right) = split_at_chars(current, column)
+    lines[row] = "\{take_chars(left, column - 1)}\{right}"
     { ..area, lines, row, column: column - 1 }
   } else if row > 0 {
     let previous = area.lines[row - 1]
@@ -220,7 +222,7 @@ fn backspace_textarea(area : Textarea) -> Textarea {
     for index in start..<area.lines.length() {
       lines.push(area.lines[index])
     }
-    { ..area, lines, row: row - 1, column: previous.length() }
+    { ..area, lines, row: row - 1, column: char_count(previous) }
   } else {
     area
   }
@@ -230,10 +232,12 @@ fn backspace_textarea(area : Textarea) -> Textarea {
 fn delete_textarea(area : Textarea) -> Textarea {
   let row = clamp(0, area.lines.length() - 1, area.row)
   let current = area.lines[row]
-  let column = clamp(0, current.length(), area.column)
-  if column < current.length() {
+  let column = clamp(0, char_count(current), area.column)
+  if column < char_count(current) {
     let lines = area.lines.copy()
-    lines[row] = "\{current[:column].to_owned()}\{current[column + 1:].to_owned()}"
+    let (left, rest) = split_at_chars(current, column)
+    let (_, right) = split_at_chars(rest, 1)
+    lines[row] = "\{left}\{right}"
     { ..area, lines, row, column }
   } else if row + 1 < area.lines.length() {
     let next = area.lines[row + 1]
@@ -255,13 +259,13 @@ fn delete_textarea(area : Textarea) -> Textarea {
 ///|
 fn move_textarea_up(area : Textarea) -> Textarea {
   let row = Int::max(0, area.row - 1)
-  { ..area, row, column: Int::min(area.column, area.lines[row].length()) }
+  { ..area, row, column: Int::min(area.column, char_count(area.lines[row])) }
 }
 
 ///|
 fn move_textarea_down(area : Textarea) -> Textarea {
   let row = Int::min(area.lines.length() - 1, area.row + 1)
-  { ..area, row, column: Int::min(area.column, area.lines[row].length()) }
+  { ..area, row, column: Int::min(area.column, char_count(area.lines[row])) }
 }
 
 ///|
@@ -275,12 +279,16 @@ fn update_textarea(area : Textarea, key : Key) -> Textarea {
       if area.column > 0 {
         { ..area, column: area.column - 1 }
       } else if area.row > 0 {
-        { ..area, row: area.row - 1, column: area.lines[area.row - 1].length() }
+        {
+          ..area,
+          row: area.row - 1,
+          column: char_count(area.lines[area.row - 1]),
+        }
       } else {
         area
       }
     Right =>
-      if area.column < area.lines[area.row].length() {
+      if area.column < char_count(area.lines[area.row]) {
         { ..area, column: area.column + 1 }
       } else if area.row + 1 < area.lines.length() {
         { ..area, row: area.row + 1, column: 0 }
@@ -290,7 +298,7 @@ fn update_textarea(area : Textarea, key : Key) -> Textarea {
     Up => move_textarea_up(area)
     Down => move_textarea_down(area)
     Home => { ..area, column: 0 }
-    End => { ..area, column: area.lines[area.row].length() }
+    End => { ..area, column: char_count(area.lines[area.row]) }
     _ => area
   }
 }
@@ -311,18 +319,33 @@ pub fn Textarea::view(
   style? : Style = Style::default(),
 ) -> Node {
   if textarea_value(self) == "" && self.placeholder != "" {
-    return text(style~, fit_line("█\{self.placeholder}", size.width))
+    return vstack(style~) <| [
+        text(
+          fit_line(
+            line_with_cursor(self.placeholder, 0, size.width),
+            size.width,
+          ),
+        ),
+        ..blank_nodes(Int::max(0, size.height - 1), size.width),
+      ]
   }
-  let end = Int::min(self.lines.length(), size.height)
-  vstack(style~) <| Array::makei(end, index => {
+  let row = clamp(0, self.lines.length() - 1, self.row)
+  let start = if row >= size.height { row - size.height + 1 } else { 0 }
+  let end = Int::min(self.lines.length(), start + size.height)
+  let visible = Array::makei(end - start, relative_index => {
+    let index = start + relative_index
     let line = self.lines[index]
     let shown = if index == self.row {
-      "\{line[:self.column].to_owned()}█\{line[self.column:].to_owned()}"
+      line_with_cursor(line, self.column, size.width)
     } else {
-      line
+      take_width(line, size.width)
     }
     text(fit_line(shown, size.width))
   })
+  vstack(style~) <| [
+    ..visible,
+    ..blank_nodes(Int::max(0, size.height - visible.length()), size.width),
+  ]
 }
 
 ///|
@@ -754,6 +777,87 @@ fn clamp(lbound : Int, ubound : Int, value : Int) -> Int {
   } else {
     value
   }
+}
+
+///|
+fn char_count(value : String) -> Int {
+  let mut count = 0
+  for _char in value {
+    count += 1
+  }
+  count
+}
+
+///|
+fn take_chars(value : String, count : Int) -> String {
+  let out = StringBuilder::new()
+  let mut taken = 0
+  for char in value {
+    if taken >= count {
+      break
+    }
+    out.write_char(char)
+    taken += 1
+  }
+  out.to_string()
+}
+
+///|
+fn split_at_chars(value : String, count : Int) -> (String, String) {
+  let left = StringBuilder::new()
+  let right = StringBuilder::new()
+  let mut index = 0
+  for char in value {
+    if index < count {
+      left.write_char(char)
+    } else {
+      right.write_char(char)
+    }
+    index += 1
+  }
+  (left.to_string(), right.to_string())
+}
+
+///|
+fn line_with_cursor(value : String, cursor : Int, width : Int) -> String {
+  let cursor = clamp(0, char_count(value), cursor)
+  let (before, after) = split_at_chars(value, cursor)
+  let text_width = Int::max(0, width - 1)
+  let left = take_right_width(before, text_width)
+  let right = take_width(after, Int::max(0, text_width - display_width(left)))
+  "\{left}█\{right}"
+}
+
+///|
+fn take_right_width(value : String, width : Int) -> String {
+  if width <= 0 {
+    return ""
+  }
+  let chars : Array[String] = []
+  for char in value {
+    chars.push(char.to_string())
+  }
+  let mut start = chars.length()
+  let mut used = 0
+  while start > 0 {
+    let next = chars[start - 1]
+    let next_width = display_width(next)
+    if used + next_width > width {
+      break
+    }
+    start -= 1
+    used += next_width
+  }
+  let out = StringBuilder::new()
+  for index in start..<chars.length() {
+    out.write_string(chars[index])
+  }
+  out.to_string()
+}
+
+///|
+fn blank_nodes(count : Int, width : Int) -> Array[Node] {
+  Array::makei(count, _ => text(repeat_to_width(" ", width)))
 }
 
 ///|

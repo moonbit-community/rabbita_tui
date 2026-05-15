@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <spawn.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -9,6 +10,8 @@
 #include <unistd.h>
 
 #include <moonbit.h>
+
+extern char **environ;
 
 static struct termios saved_termios;
 static int saved_fd = -1;
@@ -93,9 +96,12 @@ int32_t moonbit_tui_write(int32_t fd, moonbit_bytes_t bytes, int32_t offset,
   if (len <= 0) {
     return 0;
   }
-  ssize_t written = write(fd, bytes + offset, (size_t)len);
+  ssize_t written;
+  do {
+    written = write(fd, bytes + offset, (size_t)len);
+  } while (written < 0 && errno == EINTR);
   if (written < 0) {
-    return errno == EINTR ? 0 : -1;
+    return -1;
   }
   return (int32_t)written;
 }
@@ -110,21 +116,78 @@ void moonbit_tui_install_resize_handler(void) {
 }
 
 MOONBIT_FFI_EXPORT
-int32_t moonbit_tui_system(moonbit_bytes_t bytes, int32_t offset, int32_t len) {
-  if (len < 0) {
+int32_t moonbit_tui_exec_process(moonbit_bytes_t command_bytes,
+                                  int32_t command_offset, int32_t command_len,
+                                  moonbit_bytes_t args_bytes,
+                                  int32_t args_offset, int32_t args_len,
+                                  int32_t argc) {
+  if (command_len <= 0 || args_len < 0 || argc < 0) {
     return -1;
   }
-  char *command = (char *)malloc((size_t)len + 1);
+  char *command = (char *)malloc((size_t)command_len + 1);
   if (command == NULL) {
     return -1;
   }
-  memcpy(command, bytes + offset, (size_t)len);
-  command[len] = '\0';
-  int status = system(command);
-  free(command);
-  if (status == -1) {
+  memcpy(command, command_bytes + command_offset, (size_t)command_len);
+  command[command_len] = '\0';
+
+  char **argv = (char **)calloc((size_t)argc + 2, sizeof(char *));
+  if (argv == NULL) {
+    free(command);
     return -1;
   }
+  argv[0] = command;
+  int32_t cursor = 0;
+  for (int32_t index = 0; index < argc; index++) {
+    int32_t start = cursor;
+    while (cursor < args_len && args_bytes[args_offset + cursor] != '\0') {
+      cursor++;
+    }
+    int32_t len = cursor - start;
+    char *arg = (char *)malloc((size_t)len + 1);
+    if (arg == NULL) {
+      for (int32_t cleanup = 1; cleanup < index + 1; cleanup++) {
+        free(argv[cleanup]);
+      }
+      free(argv);
+      free(command);
+      return -1;
+    }
+    memcpy(arg, args_bytes + args_offset + start, (size_t)len);
+    arg[len] = '\0';
+    argv[index + 1] = arg;
+    if (cursor < args_len) {
+      cursor++;
+    }
+  }
+
+  pid_t pid;
+  int spawn_status = posix_spawnp(&pid, command, NULL, NULL, argv, environ);
+  if (spawn_status != 0) {
+    for (int32_t index = 1; index <= argc; index++) {
+      free(argv[index]);
+    }
+    free(argv);
+    free(command);
+    return spawn_status == ENOENT ? 127 : -1;
+  }
+
+  int status = 0;
+  while (waitpid(pid, &status, 0) < 0) {
+    if (errno != EINTR) {
+      for (int32_t index = 1; index <= argc; index++) {
+        free(argv[index]);
+      }
+      free(argv);
+      free(command);
+      return -1;
+    }
+  }
+  for (int32_t index = 1; index <= argc; index++) {
+    free(argv[index]);
+  }
+  free(argv);
+  free(command);
   if (WIFEXITED(status)) {
     return (int32_t)WEXITSTATUS(status);
   }

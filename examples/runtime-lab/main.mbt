@@ -173,16 +173,14 @@ fn update_scenario(
           "safe stdout/stderr emitted",
         ),
       )
-    1 => {
-      let command = "printf 'external command owns the terminal now\\n'; sleep 1"
+    1 =>
       (
-        Cmd::exec_process(command, code => emit(ExecDone(code))),
+        Cmd::exec_process_with_args("true", [], code => emit(ExecDone(code))),
         push_event(
           { ..model, status: "exec process running" },
           "exec process started",
         ),
       )
-    }
     2 =>
       (
         Cmd::suspend(() => {
@@ -324,16 +322,23 @@ fn update_timeout_finished(id : Int, model : LabModel) -> (Cmd, LabModel) {
 
 ///|
 fn view(model : LabModel) -> Node {
-  let width = Int::max(48, model.width)
-  let height = Int::max(16, model.height)
-  let body_height = Int::max(8, height - 5)
-  let body = hstack(
-      gap=1,
-      style=Style::default().size(width~, height=body_height),
-    ) <| [
-      controls_panel(model, width / 2 - 2, body_height),
-      state_panel(model, width - width / 2 - 2, body_height),
+  let width = Int::max(1, model.width - 1)
+  let height = Int::max(6, model.height)
+  let body_height = Int::max(1, height - 3)
+  let body = if width >= 56 && body_height >= 8 {
+    hstack(gap=1, style=Style::default().size(width~, height=body_height)) <| [
+      controls_panel(model, Int::max(1, width / 2), body_height),
+      state_panel(model, Int::max(1, width - width / 2 - 1), body_height),
     ]
+  } else if body_height >= 10 {
+    let panel_height = Int::max(1, (body_height - 1) / 2)
+    vstack(gap=1, style=Style::default().size(width~, height=body_height)) <| [
+      controls_panel(model, width, panel_height),
+      state_panel(model, width, body_height - panel_height - 1),
+    ]
+  } else {
+    controls_panel(model, width, body_height)
+  }
   vstack <| [
     header(model, width),
     body,
@@ -417,9 +422,9 @@ fn panel(
   vstack(
     style=Style::default()
       .fg(Rgb(124, 176, 198))
-      .size(width=Int::max(1, width - 2), height=Int::max(1, height - 2))
       .padding(Edge::all(1))
-      .border(kind=Rounded),
+      .border(kind=Rounded)
+      .size(width=Int::max(1, width), height=Int::max(1, height)),
   ) <| [
     text(style=Style::default().bold(), fit_line(title, Int::max(1, width - 4))),
     text(""),
@@ -488,8 +493,7 @@ fn scenario_title(index : Int) -> String {
 fn scenario_summary(index : Int) -> String {
   match index {
     0 => "Cmd::log/err_log print above the live frame."
-    1 =>
-      "Cmd::exec_process leaves raw mode, runs a shell command, then resumes."
+    1 => "Cmd::exec_process leaves raw mode, runs a process, then resumes."
     2 => "Cmd::suspend releases the terminal around async work."
     3 => "A delayed Cmd sends JobFinished back through Emit."
     4 =>

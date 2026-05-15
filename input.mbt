@@ -10,6 +10,9 @@ struct InputDecoder {
 } derive(Eq, Debug)
 
 ///|
+let max_pending_input_bytes = 4096
+
+///|
 fn InputDecoder::new() -> InputDecoder {
   { pending: b"" }
 }
@@ -40,7 +43,12 @@ fn InputDecoder::feed(
   } else {
     input[consumed:].to_owned()
   }
-  (events, { pending, })
+  if pending.length() > max_pending_input_bytes {
+    events.push(UnknownEvent("incomplete input exceeded 4096 bytes"))
+    (events, { pending: b"" })
+  } else {
+    (events, { pending, })
+  }
 }
 
 ///|

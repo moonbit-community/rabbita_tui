@@ -32,9 +32,10 @@ enum Cmd {
   CmdBatch(Array[Cmd])
   CmdSequence(Array[Cmd])
   CmdDelay(Int, Cmd)
+  CmdEvery(Int, Cmd)
   CmdTask(async () -> Cmd)
   CmdSuspend(async () -> Cmd)
-  CmdExecProcess(String, (Int) -> Cmd)
+  CmdExecProcess(String, Array[String], (Int) -> Cmd)
   CmdTerminal(TerminalCommand)
 }
 
@@ -122,7 +123,11 @@ pub fn Cmd::tick(milliseconds : Int, cmd : Cmd) -> Cmd {
 
 ///|
 pub fn Cmd::every(milliseconds : Int, cmd : Cmd) -> Cmd {
-  Cmd::delay(milliseconds, cmd)
+  if cmd is NoCmd {
+    NoCmd
+  } else {
+    CmdEvery(milliseconds, cmd)
+  }
 }
 
 ///|
@@ -186,7 +191,16 @@ pub fn Cmd::suspend(task : async () -> Cmd) -> Cmd {
 
 ///|
 pub fn Cmd::exec_process(command : String, done : (Int) -> Cmd) -> Cmd {
-  CmdExecProcess(command, done)
+  CmdExecProcess(command, [], done)
+}
+
+///|
+pub fn Cmd::exec_process_with_args(
+  command : String,
+  args : Array[String],
+  done : (Int) -> Cmd,
+) -> Cmd {
+  CmdExecProcess(command, args, done)
 }
 
 ///|
@@ -311,9 +325,17 @@ pub async fn Cmd::run_with_terminal(
       @async.sleep(milliseconds)
       cmd.run_with_terminal(terminal)
     }
+    CmdEvery(milliseconds, cmd) => {
+      let interval = Int::max(1, milliseconds)
+      @async.sleep(interval)
+      cmd.run_with_terminal(terminal)
+    }
     CmdTask(task) => task().run_with_terminal(terminal)
     CmdSuspend(task) => task().run_with_terminal(terminal)
-    CmdExecProcess(_, done) => done(0).run_with_terminal(terminal)
+    CmdExecProcess(command, args, done) => {
+      let status = run_process(command, args) catch { _ => -1 }
+      done(status).run_with_terminal(terminal)
+    }
     CmdTerminal(command) => terminal(command)
   }
 }
@@ -340,9 +362,10 @@ fn collect_terminal_commands(cmd : Cmd, out : Array[TerminalCommand]) -> Unit {
     NoCmd
     | CmdMessage(_)
     | CmdDelay(_)
+    | CmdEvery(_)
     | CmdTask(_)
     | CmdSuspend(_)
-    | CmdExecProcess(_) => ()
+    | CmdExecProcess(_, _, _) => ()
     CmdTerminal(command) => out.push(command)
     CmdBatch(cmds) | CmdSequence(cmds) =>
       for child in cmds {
@@ -605,10 +628,12 @@ pub fn[Model, Msg] cell_with_emit(
   view~ : (Model) -> Node,
   subscriptions? : (Model) -> Sub[Msg] = _ => NoSub,
 ) -> (Emit[Msg], Cell[Model, Msg]) {
-  let inbox : Array[Msg] = []
-  let emit = Emit::new(msg => inbox.push(msg))
   let program = cell(model~, init~, update~, view~, subscriptions~)
-  ignore(inbox)
+  let mut emit = Emit::new(_msg => ())
+  emit = Emit::new(msg => {
+    let cmd = program.step(emit, msg)
+    ignore(cmd)
+  })
   (emit, program)
 }
 

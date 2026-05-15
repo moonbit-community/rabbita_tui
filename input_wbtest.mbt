@@ -37,3 +37,13 @@ test "input decoder buffers split alt utf8 and flushes a lone escape key" {
   assert_true(events == [Key(Alt("你"))])
   assert_true(!decoder.has_pending())
 }
+
+///|
+test "input decoder bounds incomplete pending data" {
+  let bytes = Bytes::make(4100, b'a')
+  let (events, decoder) = InputDecoder::new().feed(
+    concat_bytes(b"\x1b[200~", bytes),
+  )
+  assert_true(events == [UnknownEvent("incomplete input exceeded 4096 bytes")])
+  assert_true(!decoder.has_pending())
+}

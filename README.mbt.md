@@ -299,7 +299,8 @@ Commands describe work the runtime should perform after `update`.
 | `Cmd::sequence([...])` | run commands in order |
 | `delay(cmd, ms)` / `Cmd::delay(ms, cmd)` | run a command later |
 | `Cmd::log` / `Cmd::err_log` | log safely above the live TUI |
-| `Cmd::exec_process` | temporarily restore terminal mode, run a shell command, resume |
+| `Cmd::exec_process` | temporarily restore terminal mode, run an executable, resume |
+| `Cmd::exec_process_with_args` | run an executable with argv-style arguments |
 | `Cmd::suspend` | release the terminal around async work |
 | `Cmd::quit` | stop the program |
 | `Cmd::repaint` | mark the frame dirty |
@@ -320,7 +321,12 @@ Example: external command.
 
 ```moonbit nocheck
 Cmd::exec_process(
-  "git status --short",
+  "git",
+  code => emit(ProcessExited(code)),
+)
+Cmd::exec_process_with_args(
+  "git",
+  ["status", "--short"],
   code => emit(ProcessExited(code)),
 )
 ```
@@ -367,6 +373,7 @@ app.run_with_options(ProgramOptions::inline())
 app.run_returning_model()
 app.run_with_cancel_token(options, token)
 app.run_with_timeout(options, 5000)
+let result = app.run_with_timeout_result(options, 5000)
 ```
 
 `CancelToken` is useful when an outer task owns cancellation:
@@ -376,6 +383,9 @@ let token = CancelToken::new()
 // pass token to the running program
 token.cancel()
 ```
+
+Use the `*_result` helpers when the caller needs to distinguish `ProgramQuit`,
+`ProgramCancelled`, and `ProgramTimedOut`.
 
 ## Layout and Styling
 

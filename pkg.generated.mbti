@@ -187,6 +187,7 @@ pub fn Cmd::err_write(String) -> Self
 pub fn Cmd::every(Int, Self) -> Self
 pub fn[A] Cmd::exec((A) -> Self, async () -> A noraise) -> Self
 pub fn Cmd::exec_process(String, (Int) -> Self) -> Self
+pub fn Cmd::exec_process_with_args(String, Array[String], (Int) -> Self) -> Self
 pub fn Cmd::hide_cursor() -> Self
 pub fn Cmd::is_none(Self) -> Bool
 pub fn Cmd::leave_alternate_screen() -> Self
@@ -357,12 +358,21 @@ pub async fn[Model, Msg] Program::run(Self[Model, Msg]) -> Unit raise TerminalEr
 pub async fn[Model, Msg] Program::run_headless(Self[Model, Msg], events? : Array[Event], options? : HeadlessOptions) -> ProgramRunResult[Model]
 pub async fn[Model, Msg] Program::run_returning_model(Self[Model, Msg]) -> Model raise TerminalError
 pub async fn[Model, Msg] Program::run_with_cancel_token(Self[Model, Msg], ProgramOptions, CancelToken) -> Model raise TerminalError
+pub async fn[Model, Msg] Program::run_with_cancel_token_result(Self[Model, Msg], ProgramOptions, CancelToken) -> ProgramRuntimeResult[Model] raise TerminalError
 pub async fn[Model, Msg] Program::run_with_options(Self[Model, Msg], ProgramOptions) -> Unit raise TerminalError
+pub async fn[Model, Msg] Program::run_with_options_result(Self[Model, Msg], ProgramOptions) -> ProgramRuntimeResult[Model] raise TerminalError
 pub async fn[Model, Msg] Program::run_with_options_returning_model(Self[Model, Msg], ProgramOptions) -> Model raise TerminalError
 pub async fn[Model, Msg] Program::run_with_timeout(Self[Model, Msg], ProgramOptions, Int) -> Model raise TerminalError
+pub async fn[Model, Msg] Program::run_with_timeout_result(Self[Model, Msg], ProgramOptions, Int) -> ProgramRuntimeResult[Model] raise TerminalError
 pub fn[Model, Msg] Program::step(Self[Model, Msg], Emit[Msg], Msg) -> Cmd
 pub fn[Model, Msg] Program::subscriptions(Self[Model, Msg]) -> Sub[Msg]
 pub fn[Model, Msg] Program::view(Self[Model, Msg]) -> Node
+
+pub(all) enum ProgramExit {
+  ProgramQuit
+  ProgramCancelled
+  ProgramTimedOut
+} derive(Eq, @debug.Debug)
 
 pub(all) struct ProgramOptions {
   alternate_screen : Bool
@@ -396,6 +406,11 @@ pub(all) struct ProgramRunResult[Model] {
   steps : Int
   limit_reached : Bool
 }
+
+pub(all) struct ProgramRuntimeResult[Model] {
+  model : Model
+  exit : ProgramExit
+} derive(Eq, @debug.Debug)
 
 pub(all) struct Size {
   width : Int

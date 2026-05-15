@@ -418,6 +418,19 @@ pub(all) enum Event {
 } derive(Eq, Debug)
 
 ///|
+pub(all) enum ProgramExit {
+  ProgramQuit
+  ProgramCancelled
+  ProgramTimedOut
+} derive(Eq, Debug)
+
+///|
+pub(all) struct ProgramRuntimeResult[Model] {
+  model : Model
+  exit : ProgramExit
+} derive(Eq, Debug)
+
+///|
 pub(all) struct CancelToken {
   mut cancelled : Bool
 } derive(Debug)

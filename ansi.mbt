@@ -262,10 +262,8 @@ pub fn diff_node_ansi(
 ) -> (Frame, String) {
   let next = StyledFrame::from_node(node, size)
   let plain = next.plain_frame()
-  let output = match previous {
-    None => paint_styled_frame_ansi(next)
-    Some(prev) => diff_styled_lines(prev.lines, next.lines)
-  }
+  let output = paint_styled_frame_ansi(next)
+  ignore(previous)
   (plain, output)
 }
 
@@ -389,28 +387,6 @@ fn diff_lines(previous : Array[String], next : Array[String]) -> String {
     if old_line != new_line {
       out.write_string(ansi_move_cursor(index + 1, 1))
       out.write_string(screen_line(new_line))
-    }
-  }
-  out.to_string()
-}
-
-///|
-fn diff_styled_lines(
-  previous : Array[String],
-  next : Array[StyledLine],
-) -> String {
-  let out = StringBuilder::new()
-  let limit = Int::max(previous.length(), next.length())
-  for index in 0..<limit {
-    let old_line = if index < previous.length() { previous[index] } else { "" }
-    let new_line = if index < next.length() {
-      next[index]
-    } else {
-      styled_line("", Style::default())
-    }
-    if old_line != new_line.plain {
-      out.write_string(ansi_move_cursor(index + 1, 1))
-      out.write_string(screen_styled_line(new_line))
     }
   }
   out.to_string()
@@ -775,8 +751,60 @@ fn fit_styled_line(line : StyledLine, width : Int) -> StyledLine {
   } else if display_width(line.plain) <= width {
     pad_styled_right(line, width)
   } else {
-    styled_line(plain, Style::default())
+    raw_styled_line(plain, take_ansi_width(line.ansi, width))
   }
+}
+
+///|
+fn take_ansi_width(value : String, width : Int) -> String {
+  if width <= 0 {
+    return ""
+  }
+  let out = StringBuilder::new()
+  let mut used = 0
+  let mut index = 0
+  let mut saw_escape = false
+  while index < value.length() && used < width {
+    if is_ansi_escape_start(value, index) {
+      let end = ansi_escape_end(value, index + 2)
+      out.write_string(value[index:end].to_owned())
+      saw_escape = true
+      index = end
+    } else {
+      let char = Int::unsafe_to_char(value.code_unit_at(index).to_int())
+      let char_width = display_width(char.to_string())
+      if used + char_width > width {
+        break
+      }
+      out.write_char(char)
+      used += char_width
+      index += 1
+    }
+  }
+  if saw_escape {
+    out.write_string(ansi_reset())
+  }
+  out.to_string()
+}
+
+///|
+fn is_ansi_escape_start(value : String, index : Int) -> Bool {
+  index + 1 < value.length() &&
+  value.code_unit_at(index) == Int::to_uint16(0x1b) &&
+  value.code_unit_at(index + 1) == Int::to_uint16('['.to_int())
+}
+
+///|
+fn ansi_escape_end(value : String, start : Int) -> Int {
+  let mut index = start
+  while index < value.length() {
+    let code = value.code_unit_at(index).to_int()
+    index += 1
+    if code >= 0x40 && code <= 0x7e {
+      break
+    }
+  }
+  index
 }
 
 ///|

@@ -111,7 +111,8 @@ fn update(
       let (submitted, next) = submit_prompt_model(model)
       (if submitted { emit(StreamChunk) } else { Cmd::none() }, next)
     }
-    KeyPressed(Ctrl("c")) | KeyPressed(Escape) =>
+    KeyPressed(Ctrl("c")) => (Cmd::quit(), model)
+    KeyPressed(Escape) =>
       (Cmd::none(), { ..model, streaming: false, status: "cancelled" })
     KeyPressed(PageUp) =>
       (Cmd::none(), scroll_by(model, page_scroll_delta(model)))

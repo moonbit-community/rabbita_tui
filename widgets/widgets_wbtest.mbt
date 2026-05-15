@@ -24,6 +24,19 @@ test "text input editing and cursor movement" {
     .update(TextInputKey(Delete)).value,
     "",
   )
+  let wide = TextInput(value="ab你cd")
+    .update(TextInputKey(Left))
+    .update(TextInputKey(Left))
+    .update(TextInputKey(Backspace))
+  @debug.assert_eq(wide.value, "abcd")
+  @debug.assert_eq(wide.cursor, 2)
+  @debug.assert_eq(
+    render_plain(TextInput(value="abcdef").view(width=4), {
+      width: 4,
+      height: 1,
+    }),
+    ["def█"],
+  )
 }
 
 ///|
@@ -43,7 +56,7 @@ test "textarea edits multiple lines and renders cursor" {
       width: 8,
       height: 3,
     }),
-    ["hello!█ ", "world   "],
+    ["hello!█ ", "world   ", "        "],
   )
   @debug.assert_eq(
     Textarea(placeholder="message", value="a\nb")
@@ -63,7 +76,14 @@ test "textarea edits multiple lines and renders cursor" {
       width: 10,
       height: 2,
     }),
-    ["█message  "],
+    ["█message  ", "          "],
+  )
+  @debug.assert_eq(
+    render_plain(
+      Textarea(value="one\ntwo\nthree").view(size={ width: 7, height: 2 }),
+      { width: 7, height: 2 },
+    ),
+    ["two    ", "three█ "],
   )
 }
 

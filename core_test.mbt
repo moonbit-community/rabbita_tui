@@ -266,9 +266,7 @@ async test "cmd suspend and exec process map back into messages" {
   let emit = test_emit(log)
   Cmd::sequence([
     Cmd::suspend(() => emit(Add(8))),
-    Cmd::exec_process("ignored in headless command runner", code => {
-      emit(Add(code))
-    }),
+    Cmd::exec_process("true", code => emit(Add(code))),
   ]).run()
   @debug.assert_eq(log, [Add(8), Add(0)])
 }
@@ -405,5 +403,5 @@ test "cell with emit returns a usable emit and program" {
   )
   emit.send(Add(1))
   ignore(program.step(emit, Add(2)))
-  @debug.assert_eq(program.model(), 3)
+  @debug.assert_eq(program.model(), 4)
 }
