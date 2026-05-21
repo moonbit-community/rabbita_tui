@@ -260,6 +260,23 @@ test "event handling edits prompt submits cancels and resizes" {
 }
 
 ///|
+test "composer renders unicode prompt input without aborting" {
+  let emit = emit_stub()
+  let (_, model1) = update(emit, KeyPressed(Char("😀")), initial_model())
+  let frame1 = Frame::from_node(composer_view(model1, 32), {
+    width: 32,
+    height: 4,
+  }).to_string()
+  assert_true(frame1.contains("😀█"))
+  let (_, model2) = update(emit, KeyPressed(Char("你")), model1)
+  let frame2 = Frame::from_node(composer_view(model2, 32), {
+    width: 32,
+    height: 4,
+  }).to_string()
+  assert_true(frame2.contains("😀你█"))
+}
+
+///|
 test "prompt history recalls entries and restores the draft" {
   let emit = emit_stub()
   let base = initial_model()

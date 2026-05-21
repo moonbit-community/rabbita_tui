@@ -622,7 +622,7 @@ fn prompt_lines(prompt : Textarea, width : Int) -> Array[Node] {
     let index = start + relative_index
     let line = prompt.lines[index]
     let shown = if index == prompt.row {
-      "\{line[:prompt.column].to_owned()}█\{line[prompt.column:].to_owned()}"
+      line_with_prompt_cursor(line, prompt.column)
     } else {
       line
     }
@@ -633,6 +633,20 @@ fn prompt_lines(prompt : Textarea, width : Int) -> Array[Node] {
     text(repeat_to_width(" ", width))
   })
   [..visible, ..blanks]
+}
+
+///|
+fn line_with_prompt_cursor(line : String, column : Int) -> String {
+  let offset = if column <= 0 {
+    0
+  } else {
+    line.offset_of_nth_char(column).unwrap_or(line.length())
+  }
+  let out = StringBuilder(size_hint=line.length() + 1)
+  out.write_view(line.view(end_offset=offset))
+  out.write_char('█')
+  out.write_view(line.view(start_offset=offset))
+  out.to_string()
 }
 
 ///|
