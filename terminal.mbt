@@ -33,19 +33,6 @@ extern "C" fn tui_write(
 extern "C" fn tui_install_resize_handler() -> Unit = "moonbit_tui_install_resize_handler"
 
 ///|
-#cfg(not(platform="windows"))
-#borrow(command, args)
-extern "C" fn tui_exec_process(
-  command : Bytes,
-  command_offset : Int,
-  command_len : Int,
-  args : Bytes,
-  args_offset : Int,
-  args_len : Int,
-  argc : Int,
-) -> Int = "moonbit_tui_exec_process"
-
-///|
 #coverage.skip
 #cfg(not(platform="windows"))
 pub fn is_tty(fd : Int) -> Bool {
@@ -738,7 +725,7 @@ async fn[Model, Msg] run_suspended_task(
 
 ///|
 #coverage.skip
-fn[Model, Msg] run_suspended_process(
+async fn[Model, Msg] run_suspended_process(
   program : Program[Model, Msg],
   options : ProgramOptions,
   state : RuntimeState,
@@ -808,51 +795,13 @@ fn[Model, Msg] resume_terminal(
 
 ///|
 #coverage.skip
-#cfg(not(platform="windows"))
-fn run_process(
+async fn run_process(
   command : String,
   args : Array[String],
 ) -> Int raise TerminalError {
-  let bytes = @encoding/utf8.encode(command)
-  let packed_args = pack_exec_args(args)
-  let status = tui_exec_process(
-    bytes,
-    0,
-    bytes.length(),
-    packed_args,
-    0,
-    packed_args.length(),
-    args.length(),
-  )
-  if status < 0 {
-    raise NativeError("failed to execute process: \{command}")
+  @process.run(command, args) catch {
+    err => raise NativeError("failed to execute process: \{command}: \{err}")
   }
-  status
-}
-
-///|
-#coverage.skip
-#cfg(platform="windows")
-fn run_process(
-  command : String,
-  args : Array[String],
-) -> Int raise TerminalError {
-  ignore(command)
-  ignore(args)
-  raise UnsupportedPlatform
-}
-
-///|
-#coverage.skip
-fn pack_exec_args(args : Array[String]) -> Bytes {
-  let out = StringBuilder::new()
-  for index, arg in args {
-    if index > 0 {
-      out.write_char('\u{00}')
-    }
-    out.write_string(arg)
-  }
-  @encoding/utf8.encode(out.to_string())
 }
 
 ///|

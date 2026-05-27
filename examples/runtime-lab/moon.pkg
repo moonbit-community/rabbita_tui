@@ -1,8 +1,8 @@
 import {
   "moonbit-community/rabbita_tui" @tui,
-  "moonbit-community/rabbita_tui/widgets" @widgets,
+  "moonbit-community/rabbita_tui/widgets",
   "moonbitlang/async",
-  "moonbitlang/core/immut/vector" @vector,
+  "moonbitlang/core/immut/vector",
 }
 
 supported_targets = "+native"

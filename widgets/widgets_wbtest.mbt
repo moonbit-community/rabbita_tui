@@ -174,8 +174,8 @@ test "paginator progress timer keymap tabs and modal render" {
     [" Chat  [Diff]  Log  "],
   )
   let dialog = modal(title="Title", size={ width: 8, height: 4 }) <| [
-      text("Body"),
-    ]
+    text("Body"),
+  ]
   @debug.assert_eq(render_plain(dialog, { width: 8, height: 4 }), [
     "╭──────╮", "│Title │", "│Body  │", "╰──────╯",
   ])
