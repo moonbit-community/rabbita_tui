@@ -800,6 +800,7 @@ async fn run_process(
   args : Array[String],
 ) -> Int raise TerminalError {
   @process.run(command, args) catch {
+    @os_error.OSError(_) as err if err.is_ENOENT() => 127
     err => raise NativeError("failed to execute process: \{command}: \{err}")
   }
 }

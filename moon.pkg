@@ -3,6 +3,7 @@ import {
   "moonbitlang/core/encoding/utf8" @encoding/utf8,
   "moonbitlang/async",
   "moonbitlang/async/aqueue",
+  "moonbitlang/async/os_error",
   "moonbitlang/async/process",
   "moonbitlang/async/stdio",
 }
