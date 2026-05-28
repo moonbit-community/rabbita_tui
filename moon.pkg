@@ -1,13 +1,15 @@
 import {
-  "moonbitlang/core/string" @string,
+  "moonbitlang/core/string",
   "moonbitlang/core/encoding/utf8" @encoding/utf8,
-  "moonbitlang/async" @async,
-  "moonbitlang/async/aqueue" @aqueue,
-  "moonbitlang/async/stdio" @stdio,
+  "moonbitlang/async",
+  "moonbitlang/async/aqueue",
+  "moonbitlang/async/os_error",
+  "moonbitlang/async/process",
+  "moonbitlang/async/stdio",
 }
 
 import {
-  "moonbitlang/core/debug" @debug,
+  "moonbitlang/core/debug",
 } for "test"
 
 supported_targets = "+native"
