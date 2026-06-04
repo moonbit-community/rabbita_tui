@@ -188,6 +188,7 @@ priv struct RuntimeState {
   mut current_size : Size
   mut exit : ProgramExit
   suspension_gate : @semaphore.Semaphore
+  mut input_reader : @async.Task[Unit]?
 }
 
 ///|
@@ -205,6 +206,7 @@ async fn[Model, Msg] Program::run_with_runtime_control(
     current_size: terminal_size(),
     exit: ProgramQuit,
     suspension_gate: @semaphore.Semaphore::new(1),
+    input_reader: None,
   }
   let queue = @aqueue.Queue::new(kind=Unbounded)
   let emit = Emit::new(msg => {
@@ -242,9 +244,7 @@ async fn[Model, Msg] Program::run_with_runtime_control(
   self.mark_clean()
   @async.with_task_group(group => {
     self.subscriptions().start(emit, group)
-    group.spawn_bg(no_wait=true, allow_failure=true, () => {
-      read_terminal_input(self, queue, group)
-    })
+    start_terminal_input_reader(self, queue, group, state)
     group.spawn_bg(no_wait=true, allow_failure=true, () => {
       watch_terminal_resize(
         queue,
@@ -693,11 +693,13 @@ async fn[Model, Msg] run_runtime_cmd(
       run_runtime_cmd(program, next, queue, group, options, state)
     }
     CmdSuspend(task) => {
-      let next = run_suspended_task(program, options, state, task)
+      let next = run_suspended_task(program, queue, group, options, state, task)
       run_runtime_cmd(program, next, queue, group, options, state)
     }
     CmdExecProcess(command, args, done) => {
-      let status = run_suspended_process(program, options, state, command, args)
+      let status = run_suspended_process(
+        program, queue, group, options, state, command, args,
+      )
       run_runtime_cmd(program, done(status), queue, group, options, state)
     }
     CmdTerminal(command) => queue.put(RuntimeTerminal(command))
@@ -708,6 +710,8 @@ async fn[Model, Msg] run_runtime_cmd(
 #coverage.skip
 async fn[Model, Msg] run_suspended_task(
   program : Program[Model, Msg],
+  queue : @aqueue.Queue[RuntimeItem[Msg]],
+  group : @async.TaskGroup[Unit],
   options : ProgramOptions,
   state : RuntimeState,
   task : async () -> Cmd,
@@ -716,6 +720,7 @@ async fn[Model, Msg] run_suspended_task(
     err => raise NativeError(err.to_string())
   }
   defer state.suspension_gate.release()
+  stop_terminal_input_reader(state)
   suspend_terminal(options, state)
   let msg = task() catch {
     err => {
@@ -726,6 +731,7 @@ async fn[Model, Msg] run_suspended_task(
     }
   }
   resume_terminal(program, options, state)
+  start_terminal_input_reader(program, queue, group, state)
   msg
 }
 
@@ -733,6 +739,8 @@ async fn[Model, Msg] run_suspended_task(
 #coverage.skip
 async fn[Model, Msg] run_suspended_process(
   program : Program[Model, Msg],
+  queue : @aqueue.Queue[RuntimeItem[Msg]],
+  group : @async.TaskGroup[Unit],
   options : ProgramOptions,
   state : RuntimeState,
   command : String,
@@ -742,6 +750,7 @@ async fn[Model, Msg] run_suspended_process(
     err => raise NativeError(err.to_string())
   }
   defer state.suspension_gate.release()
+  stop_terminal_input_reader(state)
   suspend_terminal(options, state)
   let status = run_process(command, args) catch {
     err => {
@@ -752,6 +761,7 @@ async fn[Model, Msg] run_suspended_process(
     }
   }
   resume_terminal(program, options, state)
+  start_terminal_input_reader(program, queue, group, state)
   status
 }
 
@@ -858,6 +868,39 @@ async fn[Msg] watch_terminal_resize(
       last = next
       queue.put(RuntimeResize(next))
     }
+  }
+}
+
+///|
+#coverage.skip
+fn[Model, Msg] start_terminal_input_reader(
+  program : Program[Model, Msg],
+  queue : @aqueue.Queue[RuntimeItem[Msg]],
+  group : @async.TaskGroup[Unit],
+  state : RuntimeState,
+) -> Unit {
+  state.input_reader = Some(
+    group.spawn(no_wait=true, allow_failure=true, () => {
+      read_terminal_input(program, queue, group)
+    }),
+  )
+}
+
+///|
+#coverage.skip
+async fn stop_terminal_input_reader(
+  state : RuntimeState,
+) -> Unit raise TerminalError {
+  match state.input_reader {
+    Some(reader) => {
+      state.input_reader = None
+      reader.cancel()
+      reader.wait() catch {
+        err if @async.is_cancellation_error(err) => ()
+        err => raise NativeError("failed to stop terminal input reader: \{err}")
+      }
+    }
+    None => ()
   }
 }
 
