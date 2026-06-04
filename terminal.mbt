@@ -187,6 +187,7 @@ priv struct RuntimeState {
   mut previous : StyledFrame?
   mut current_size : Size
   mut exit : ProgramExit
+  suspension_gate : @semaphore.Semaphore
 }
 
 ///|
@@ -203,6 +204,7 @@ async fn[Model, Msg] Program::run_with_runtime_control(
     previous: None,
     current_size: terminal_size(),
     exit: ProgramQuit,
+    suspension_gate: @semaphore.Semaphore::new(1),
   }
   let queue = @aqueue.Queue::new(kind=Unbounded)
   let emit = Emit::new(msg => {
@@ -710,6 +712,10 @@ async fn[Model, Msg] run_suspended_task(
   state : RuntimeState,
   task : async () -> Cmd,
 ) -> Cmd raise TerminalError {
+  state.suspension_gate.acquire() catch {
+    err => raise NativeError(err.to_string())
+  }
+  defer state.suspension_gate.release()
   suspend_terminal(options, state)
   let msg = task() catch {
     err => {
@@ -732,6 +738,10 @@ async fn[Model, Msg] run_suspended_process(
   command : String,
   args : Array[String],
 ) -> Int raise TerminalError {
+  state.suspension_gate.acquire() catch {
+    err => raise NativeError(err.to_string())
+  }
+  defer state.suspension_gate.release()
   suspend_terminal(options, state)
   let status = run_process(command, args) catch {
     err => {

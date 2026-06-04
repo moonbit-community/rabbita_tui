@@ -5,6 +5,7 @@ import {
   "moonbitlang/async/aqueue",
   "moonbitlang/async/os_error",
   "moonbitlang/async/process",
+  "moonbitlang/async/semaphore",
   "moonbitlang/async/stdio",
 }
 
