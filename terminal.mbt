@@ -33,19 +33,6 @@ extern "C" fn tui_write(
 extern "C" fn tui_install_resize_handler() -> Unit = "moonbit_tui_install_resize_handler"
 
 ///|
-#cfg(not(platform="windows"))
-#borrow(command, args)
-extern "C" fn tui_exec_process(
-  command : Bytes,
-  command_offset : Int,
-  command_len : Int,
-  args : Bytes,
-  args_offset : Int,
-  args_len : Int,
-  argc : Int,
-) -> Int = "moonbit_tui_exec_process"
-
-///|
 #coverage.skip
 #cfg(not(platform="windows"))
 pub fn is_tty(fd : Int) -> Bool {
@@ -200,6 +187,8 @@ priv struct RuntimeState {
   mut previous : StyledFrame?
   mut current_size : Size
   mut exit : ProgramExit
+  suspension_gate : @semaphore.Semaphore
+  mut input_reader : @async.Task[Unit]?
 }
 
 ///|
@@ -216,6 +205,8 @@ async fn[Model, Msg] Program::run_with_runtime_control(
     previous: None,
     current_size: terminal_size(),
     exit: ProgramQuit,
+    suspension_gate: @semaphore.Semaphore::new(1),
+    input_reader: None,
   }
   let queue = @aqueue.Queue::new(kind=Unbounded)
   let emit = Emit::new(msg => {
@@ -253,9 +244,7 @@ async fn[Model, Msg] Program::run_with_runtime_control(
   self.mark_clean()
   @async.with_task_group(group => {
     self.subscriptions().start(emit, group)
-    group.spawn_bg(no_wait=true, allow_failure=true, () => {
-      read_terminal_input(self, queue, group)
-    })
+    start_terminal_input_reader(self, queue, group, state)
     group.spawn_bg(no_wait=true, allow_failure=true, () => {
       watch_terminal_resize(
         queue,
@@ -704,11 +693,13 @@ async fn[Model, Msg] run_runtime_cmd(
       run_runtime_cmd(program, next, queue, group, options, state)
     }
     CmdSuspend(task) => {
-      let next = run_suspended_task(program, options, state, task)
+      let next = run_suspended_task(program, queue, group, options, state, task)
       run_runtime_cmd(program, next, queue, group, options, state)
     }
     CmdExecProcess(command, args, done) => {
-      let status = run_suspended_process(program, options, state, command, args)
+      let status = run_suspended_process(
+        program, queue, group, options, state, command, args,
+      )
       run_runtime_cmd(program, done(status), queue, group, options, state)
     }
     CmdTerminal(command) => queue.put(RuntimeTerminal(command))
@@ -719,10 +710,17 @@ async fn[Model, Msg] run_runtime_cmd(
 #coverage.skip
 async fn[Model, Msg] run_suspended_task(
   program : Program[Model, Msg],
+  queue : @aqueue.Queue[RuntimeItem[Msg]],
+  group : @async.TaskGroup[Unit],
   options : ProgramOptions,
   state : RuntimeState,
   task : async () -> Cmd,
 ) -> Cmd raise TerminalError {
+  state.suspension_gate.acquire() catch {
+    err => raise NativeError(err.to_string())
+  }
+  defer state.suspension_gate.release()
+  stop_terminal_input_reader(state)
   suspend_terminal(options, state)
   let msg = task() catch {
     err => {
@@ -733,18 +731,26 @@ async fn[Model, Msg] run_suspended_task(
     }
   }
   resume_terminal(program, options, state)
+  start_terminal_input_reader(program, queue, group, state)
   msg
 }
 
 ///|
 #coverage.skip
-fn[Model, Msg] run_suspended_process(
+async fn[Model, Msg] run_suspended_process(
   program : Program[Model, Msg],
+  queue : @aqueue.Queue[RuntimeItem[Msg]],
+  group : @async.TaskGroup[Unit],
   options : ProgramOptions,
   state : RuntimeState,
   command : String,
   args : Array[String],
 ) -> Int raise TerminalError {
+  state.suspension_gate.acquire() catch {
+    err => raise NativeError(err.to_string())
+  }
+  defer state.suspension_gate.release()
+  stop_terminal_input_reader(state)
   suspend_terminal(options, state)
   let status = run_process(command, args) catch {
     err => {
@@ -755,6 +761,7 @@ fn[Model, Msg] run_suspended_process(
     }
   }
   resume_terminal(program, options, state)
+  start_terminal_input_reader(program, queue, group, state)
   status
 }
 
@@ -808,51 +815,14 @@ fn[Model, Msg] resume_terminal(
 
 ///|
 #coverage.skip
-#cfg(not(platform="windows"))
-fn run_process(
+async fn run_process(
   command : String,
   args : Array[String],
 ) -> Int raise TerminalError {
-  let bytes = @encoding/utf8.encode(command)
-  let packed_args = pack_exec_args(args)
-  let status = tui_exec_process(
-    bytes,
-    0,
-    bytes.length(),
-    packed_args,
-    0,
-    packed_args.length(),
-    args.length(),
-  )
-  if status < 0 {
-    raise NativeError("failed to execute process: \{command}")
+  @process.run(command, args) catch {
+    @os_error.OSError(_) as err if err.is_ENOENT() => 127
+    err => raise NativeError("failed to execute process: \{command}: \{err}")
   }
-  status
-}
-
-///|
-#coverage.skip
-#cfg(platform="windows")
-fn run_process(
-  command : String,
-  args : Array[String],
-) -> Int raise TerminalError {
-  ignore(command)
-  ignore(args)
-  raise UnsupportedPlatform
-}
-
-///|
-#coverage.skip
-fn pack_exec_args(args : Array[String]) -> Bytes {
-  let out = StringBuilder::new()
-  for index, arg in args {
-    if index > 0 {
-      out.write_char('\u{00}')
-    }
-    out.write_string(arg)
-  }
-  @encoding/utf8.encode(out.to_string())
 }
 
 ///|
@@ -898,6 +868,39 @@ async fn[Msg] watch_terminal_resize(
       last = next
       queue.put(RuntimeResize(next))
     }
+  }
+}
+
+///|
+#coverage.skip
+fn[Model, Msg] start_terminal_input_reader(
+  program : Program[Model, Msg],
+  queue : @aqueue.Queue[RuntimeItem[Msg]],
+  group : @async.TaskGroup[Unit],
+  state : RuntimeState,
+) -> Unit {
+  state.input_reader = Some(
+    group.spawn(no_wait=true, allow_failure=true, () => {
+      read_terminal_input(program, queue, group)
+    }),
+  )
+}
+
+///|
+#coverage.skip
+async fn stop_terminal_input_reader(
+  state : RuntimeState,
+) -> Unit raise TerminalError {
+  match state.input_reader {
+    Some(reader) => {
+      state.input_reader = None
+      reader.cancel()
+      reader.wait() catch {
+        err if @async.is_cancellation_error(err) => ()
+        err => raise NativeError("failed to stop terminal input reader: \{err}")
+      }
+    }
+    None => ()
   }
 }
 

@@ -132,8 +132,8 @@ fn view(model : Model) -> Node {
   let body = text("count = \{model.count}")
   let help = text("up/down change  q quit")
   let card = vstack(gap=1) <| [
-      title, body, help,
-    ]
+    title, body, help,
+  ]
   vstack <| [
     status_line(
       left="counter",

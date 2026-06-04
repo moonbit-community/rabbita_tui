@@ -320,14 +320,11 @@ pub fn Textarea::view(
 ) -> Node {
   if textarea_value(self) == "" && self.placeholder != "" {
     return vstack(style~) <| [
-        text(
-          fit_line(
-            line_with_cursor(self.placeholder, 0, size.width),
-            size.width,
-          ),
-        ),
-        ..blank_nodes(Int::max(0, size.height - 1), size.width),
-      ]
+      text(
+        fit_line(line_with_cursor(self.placeholder, 0, size.width), size.width),
+      ),
+      ..blank_nodes(Int::max(0, size.height - 1), size.width),
+    ]
   }
   let row = clamp(0, self.lines.length() - 1, self.row)
   let start = if row >= size.height { row - size.height + 1 } else { 0 }

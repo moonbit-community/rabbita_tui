@@ -267,8 +267,9 @@ async test "cmd suspend and exec process map back into messages" {
   Cmd::sequence([
     Cmd::suspend(() => emit(Add(8))),
     Cmd::exec_process("true", code => emit(Add(code))),
+    Cmd::exec_process("__rabbita_tui_missing_command__", code => emit(Add(code))),
   ]).run()
-  @debug.assert_eq(log, [Add(8), Add(0)])
+  @debug.assert_eq(log, [Add(8), Add(0), Add(127)])
 }
 
 ///|

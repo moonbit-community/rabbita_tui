@@ -56,9 +56,9 @@ test "plain renderer covers empty fragment style fill and rounded border" {
 ///|
 test "horizontal stack distributes width" {
   let node = hstack(gap=1) <| [
-      text("left"),
-      text("right"),
-    ]
+    text("left"),
+    text("right"),
+  ]
   @debug.assert_eq(render_plain(node, { width: 11, height: 1 }), ["left  right"])
   @debug.assert_eq(render_plain(hstack <| [], { width: 4, height: 1 }), [])
   @debug.assert_eq(
@@ -157,13 +157,13 @@ test "layout supports sizing alignment placement and edge constructors" {
 ///|
 test "style layout composes size padding and border" {
   let node = vstack(
-      style=Style::default()
-        .size(width=9, height=5)
-        .padding(Edge::all(1))
-        .border(kind=Square),
-    ) <| [
-      text("x"),
-    ]
+    style=Style::default()
+      .size(width=9, height=5)
+      .padding(Edge::all(1))
+      .border(kind=Square),
+  ) <| [
+    text("x"),
+  ]
   @debug.assert_eq(render_plain(node, { width: 9, height: 5 }), [
     "+-------+", "|       |", "| x     |", "|       |", "+-------+",
   ])
