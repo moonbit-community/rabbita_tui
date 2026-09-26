@@ -32,7 +32,7 @@ pub fn TextInput::TextInput(
   placeholder? : String = "",
   value? : String = "",
 ) -> TextInput {
-  { value, cursor: char_count(value), placeholder }
+  { value, cursor: char_count(value), placeholder, }
 }
 
 ///|
@@ -40,7 +40,7 @@ fn insert_text_input(input : TextInput, text : String) -> TextInput {
   let cursor = clamp(0, char_count(input.value), input.cursor)
   let (left, right) = split_at_chars(input.value, cursor)
   let value = "\{left}\{text}\{right}"
-  { ..input, value, cursor: cursor + char_count(text) }
+  { ..input, value, cursor: cursor + char_count(text), }
 }
 
 ///|
@@ -67,18 +67,18 @@ fn delete_text_input(input : TextInput) -> TextInput {
   } else {
     let (left, rest) = split_at_chars(input.value, cursor)
     let (_, right) = split_at_chars(rest, 1)
-    { ..input, value: "\{left}\{right}", cursor }
+    { ..input, value: "\{left}\{right}", cursor, }
   }
 }
 
 ///|
 fn move_text_input_left(input : TextInput) -> TextInput {
-  { ..input, cursor: Int::max(0, input.cursor - 1) }
+  { ..input, cursor: Int::max(0, input.cursor - 1), }
 }
 
 ///|
 fn move_text_input_right(input : TextInput) -> TextInput {
-  { ..input, cursor: Int::min(char_count(input.value), input.cursor + 1) }
+  { ..input, cursor: Int::min(char_count(input.value), input.cursor + 1), }
 }
 
 ///|
@@ -89,8 +89,8 @@ fn update_text_input(input : TextInput, key : Key) -> TextInput {
     Delete => delete_text_input(input)
     Left => move_text_input_left(input)
     Right => move_text_input_right(input)
-    Home => { ..input, cursor: 0 }
-    End => { ..input, cursor: char_count(input.value) }
+    Home => { ..input, cursor: 0, }
+    End => { ..input, cursor: char_count(input.value), }
     _ => input
   }
 }
@@ -99,8 +99,8 @@ fn update_text_input(input : TextInput, key : Key) -> TextInput {
 pub fn TextInput::update(self : TextInput, msg : TextInputMsg) -> TextInput {
   match msg {
     TextInputKey(key) => update_text_input(self, key)
-    TextInputSet(value) => { ..self, value, cursor: char_count(value) }
-    TextInputClear => { ..self, value: "", cursor: 0 }
+    TextInputSet(value) => { ..self, value, cursor: char_count(value), }
+    TextInputClear => { ..self, value: "", cursor: 0, }
   }
 }
 
@@ -139,14 +139,14 @@ pub fn Textarea::Textarea(
   placeholder? : String = "",
   value? : String = "",
 ) -> Textarea {
-  set_textarea({ lines: [""], row: 0, column: 0, placeholder }, value)
+  set_textarea({ lines: [""], row: 0, column: 0, placeholder, }, value)
 }
 
 ///|
 fn set_textarea(area : Textarea, value : String) -> Textarea {
   let lines = split_widget_lines(value)
   let last = Int::max(0, lines.length() - 1)
-  { ..area, lines, row: last, column: char_count(lines[last]) }
+  { ..area, lines, row: last, column: char_count(lines[last]), }
 }
 
 ///|
@@ -178,7 +178,7 @@ fn insert_textarea(area : Textarea, value : String) -> Textarea {
   let lines = area.lines.copy()
   let (left, right) = split_at_chars(current, column)
   lines[row] = "\{left}\{value}\{right}"
-  { ..area, lines, row, column: column + char_count(value) }
+  { ..area, lines, row, column: column + char_count(value), }
 }
 
 ///|
@@ -197,7 +197,7 @@ fn newline_textarea(area : Textarea) -> Textarea {
   for index in start..<area.lines.length() {
     lines.push(area.lines[index])
   }
-  { ..area, lines, row: row + 1, column: 0 }
+  { ..area, lines, row: row + 1, column: 0, }
 }
 
 ///|
@@ -209,7 +209,7 @@ fn backspace_textarea(area : Textarea) -> Textarea {
     let lines = area.lines.copy()
     let (left, right) = split_at_chars(current, column)
     lines[row] = "\{take_chars(left, column - 1)}\{right}"
-    { ..area, lines, row, column: column - 1 }
+    { ..area, lines, row, column: column - 1, }
   } else if row > 0 {
     let previous = area.lines[row - 1]
     let lines : Array[String] = []
@@ -222,7 +222,7 @@ fn backspace_textarea(area : Textarea) -> Textarea {
     for index in start..<area.lines.length() {
       lines.push(area.lines[index])
     }
-    { ..area, lines, row: row - 1, column: char_count(previous) }
+    { ..area, lines, row: row - 1, column: char_count(previous), }
   } else {
     area
   }
@@ -238,7 +238,7 @@ fn delete_textarea(area : Textarea) -> Textarea {
     let (left, rest) = split_at_chars(current, column)
     let (_, right) = split_at_chars(rest, 1)
     lines[row] = "\{left}\{right}"
-    { ..area, lines, row, column }
+    { ..area, lines, row, column, }
   } else if row + 1 < area.lines.length() {
     let next = area.lines[row + 1]
     let lines : Array[String] = []
@@ -250,7 +250,7 @@ fn delete_textarea(area : Textarea) -> Textarea {
     for index in start..<area.lines.length() {
       lines.push(area.lines[index])
     }
-    { ..area, lines, row, column }
+    { ..area, lines, row, column, }
   } else {
     area
   }
@@ -259,13 +259,13 @@ fn delete_textarea(area : Textarea) -> Textarea {
 ///|
 fn move_textarea_up(area : Textarea) -> Textarea {
   let row = Int::max(0, area.row - 1)
-  { ..area, row, column: Int::min(area.column, char_count(area.lines[row])) }
+  { ..area, row, column: Int::min(area.column, char_count(area.lines[row])), }
 }
 
 ///|
 fn move_textarea_down(area : Textarea) -> Textarea {
   let row = Int::min(area.lines.length() - 1, area.row + 1)
-  { ..area, row, column: Int::min(area.column, char_count(area.lines[row])) }
+  { ..area, row, column: Int::min(area.column, char_count(area.lines[row])), }
 }
 
 ///|
@@ -277,7 +277,7 @@ fn update_textarea(area : Textarea, key : Key) -> Textarea {
     Delete => delete_textarea(area)
     Left =>
       if area.column > 0 {
-        { ..area, column: area.column - 1 }
+        { ..area, column: area.column - 1, }
       } else if area.row > 0 {
         {
           ..area,
@@ -289,16 +289,16 @@ fn update_textarea(area : Textarea, key : Key) -> Textarea {
       }
     Right =>
       if area.column < char_count(area.lines[area.row]) {
-        { ..area, column: area.column + 1 }
+        { ..area, column: area.column + 1, }
       } else if area.row + 1 < area.lines.length() {
-        { ..area, row: area.row + 1, column: 0 }
+        { ..area, row: area.row + 1, column: 0, }
       } else {
         area
       }
     Up => move_textarea_up(area)
     Down => move_textarea_down(area)
-    Home => { ..area, column: 0 }
-    End => { ..area, column: char_count(area.lines[area.row]) }
+    Home => { ..area, column: 0, }
+    End => { ..area, column: char_count(area.lines[area.row]), }
     _ => area
   }
 }
@@ -320,14 +320,11 @@ pub fn Textarea::view(
 ) -> Node {
   if textarea_value(self) == "" && self.placeholder != "" {
     return vstack(style~) <| [
-        text(
-          fit_line(
-            line_with_cursor(self.placeholder, 0, size.width),
-            size.width,
-          ),
-        ),
-        ..blank_nodes(Int::max(0, size.height - 1), size.width),
-      ]
+      text(
+        fit_line(line_with_cursor(self.placeholder, 0, size.width), size.width),
+      ),
+      ..blank_nodes(Int::max(0, size.height - 1), size.width),
+    ]
   }
   let row = clamp(0, self.lines.length() - 1, self.row)
   let start = if row >= size.height { row - size.height + 1 } else { 0 }
@@ -368,13 +365,13 @@ pub fn List::List(
   selected? : Int = 0,
   offset? : Int = 0,
 ) -> List {
-  { items, selected, offset }
+  { items, selected, offset, }
 }
 
 ///|
 fn move_list_selection(state : List, delta : Int, height? : Int = 0) -> List {
   if state.items.is_empty() {
-    { ..state, selected: 0, offset: 0 }
+    { ..state, selected: 0, offset: 0, }
   } else {
     let selected = clamp(0, state.items.length() - 1, state.selected + delta)
     let offset = if height > 0 {
@@ -382,7 +379,7 @@ fn move_list_selection(state : List, delta : Int, height? : Int = 0) -> List {
     } else {
       state.offset
     }
-    { ..state, selected, offset }
+    { ..state, selected, offset, }
   }
 }
 
@@ -412,7 +409,7 @@ pub fn List::update(self : List, msg : ListMsg) -> List {
     ListPage(delta, height) => page_list(self, delta, height)
     ListSelect(index) =>
       move_list_selection(
-        { ..self, selected: 0 },
+        { ..self, selected: 0, },
         index,
         height=self.items.length(),
       )
@@ -498,13 +495,13 @@ pub fn Viewport::Viewport(
   lines~ : Array[String],
   offset? : Int = 0,
 ) -> Viewport {
-  { lines, offset }
+  { lines, offset, }
 }
 
 ///|
 fn scroll_viewport(viewport : Viewport, delta : Int, height : Int) -> Viewport {
   let max_offset = Int::max(0, viewport.lines.length() - height)
-  { ..viewport, offset: clamp(0, max_offset, viewport.offset + delta) }
+  { ..viewport, offset: clamp(0, max_offset, viewport.offset + delta), }
 }
 
 ///|
@@ -512,7 +509,7 @@ pub fn Viewport::update(self : Viewport, msg : ViewportMsg) -> Viewport {
   match msg {
     ViewportScroll(delta, height) => scroll_viewport(self, delta, height)
     ViewportJump(offset, height) =>
-      scroll_viewport({ ..self, offset: 0 }, offset, height)
+      scroll_viewport({ ..self, offset: 0, }, offset, height)
   }
 }
 
@@ -647,7 +644,7 @@ pub fn CommandPalette::CommandPalette(
   items~ : Array[String],
   selected? : Int = 0,
 ) -> CommandPalette {
-  { input: TextInput(), items, selected }
+  { input: TextInput(), items, selected, }
 }
 
 ///|
@@ -656,7 +653,7 @@ fn update_command_palette(
   key : Key,
 ) -> CommandPalette {
   match key {
-    Up => { ..palette, selected: Int::max(0, palette.selected - 1) }
+    Up => { ..palette, selected: Int::max(0, palette.selected - 1), }
     Down => {
       let count = command_palette_items(palette).length()
       {
@@ -665,7 +662,11 @@ fn update_command_palette(
       }
     }
     _ =>
-      { ..palette, input: palette.input.update(TextInputKey(key)), selected: 0 }
+      {
+        ..palette,
+        input: palette.input.update(TextInputKey(key)),
+        selected: 0,
+      }
   }
 }
 
@@ -707,10 +708,10 @@ pub fn CommandPalette::update(
     CommandPaletteKey(key) => update_command_palette(self, key)
     CommandPaletteSelect(index) => {
       let count = command_palette_items(self).length()
-      { ..self, selected: clamp(0, Int::max(0, count - 1), index) }
+      { ..self, selected: clamp(0, Int::max(0, count - 1), index), }
     }
     CommandPaletteSetInput(value) =>
-      { ..self, input: self.input.update(TextInputSet(value)), selected: 0 }
+      { ..self, input: self.input.update(TextInputSet(value)), selected: 0, }
   }
 }
 

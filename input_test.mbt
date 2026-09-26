@@ -106,14 +106,14 @@ test "input parser decodes sgr mouse events" {
       b"\x1b[<0;12;5M\x1b[<0;12;5m\x1b[<32;6;7M\x1b[<65;2;3M\x1b[<64;4;5M\x1b[<1;1;2M\x1b[<2;3;4M\x1b[<3;5;6M",
     ),
     [
-      Mouse({ button: Primary, action: Press, x: 12, y: 5 }),
-      Mouse({ button: Primary, action: Release, x: 12, y: 5 }),
-      Mouse({ button: Primary, action: Drag, x: 6, y: 7 }),
-      Mouse({ button: WheelDown, action: Press, x: 2, y: 3 }),
-      Mouse({ button: WheelUp, action: Press, x: 4, y: 5 }),
-      Mouse({ button: Middle, action: Press, x: 1, y: 2 }),
-      Mouse({ button: Secondary, action: Press, x: 3, y: 4 }),
-      Mouse({ button: Other(3), action: Press, x: 5, y: 6 }),
+      Mouse({ button: Primary, action: Press, x: 12, y: 5, }),
+      Mouse({ button: Primary, action: Release, x: 12, y: 5, }),
+      Mouse({ button: Primary, action: Drag, x: 6, y: 7, }),
+      Mouse({ button: WheelDown, action: Press, x: 2, y: 3, }),
+      Mouse({ button: WheelUp, action: Press, x: 4, y: 5, }),
+      Mouse({ button: Middle, action: Press, x: 1, y: 2, }),
+      Mouse({ button: Secondary, action: Press, x: 3, y: 4, }),
+      Mouse({ button: Other(3), action: Press, x: 5, y: 6, }),
     ],
   )
 }

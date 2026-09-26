@@ -37,7 +37,7 @@ enum CounterMsg {
 
 ///|
 fn initial_model() -> CounterModel {
-  { count: 0, step: 1, width: 72, height: 18, status: "ready" }
+  { count: 0, step: 1, width: 72, height: 18, status: "ready", }
 }
 
 ///|
@@ -87,11 +87,11 @@ fn update(
             },
           )
         Char("r") =>
-          (Cmd::none(), { ..model, count: 0, step: 1, status: "reset" })
+          (Cmd::none(), { ..model, count: 0, step: 1, status: "reset", })
         _ => (Cmd::none(), model)
       }
     Resize(size) =>
-      (Cmd::none(), { ..model, width: size.width, height: size.height })
+      (Cmd::none(), { ..model, width: size.width, height: size.height, })
   }
 }
 
@@ -132,11 +132,11 @@ fn view(model : CounterModel) -> Node {
       ),
       keymap(
         bindings=[
-          { keys: [Up, Char("+")], help: "inc" },
-          { keys: [Down, Char("-")], help: "dec" },
-          { keys: [Char("["), Char("]")], help: "step" },
-          { keys: [Char("r")], help: "reset" },
-          { keys: [Char("q")], help: "quit" },
+          { keys: [Up, Char("+")], help: "inc", },
+          { keys: [Down, Char("-")], help: "dec", },
+          { keys: [Char("["), Char("]")], help: "step", },
+          { keys: [Char("r")], help: "reset", },
+          { keys: [Char("q")], help: "quit", },
         ],
         width=clamp(24, 72, Int::max(32, model.width - 1) - 4) - 4,
         style=Style::default().fg(Ansi(244)),
@@ -171,7 +171,7 @@ fn app() -> Cell[CounterModel, CounterMsg] {
 
 ///|
 fn fallback_snapshot() -> String {
-  Frame::from_node(app().view(), { width: 72, height: 18 }).to_string()
+  Frame::from_node(app().view(), { width: 72, height: 18, }).to_string()
 }
 
 ///|

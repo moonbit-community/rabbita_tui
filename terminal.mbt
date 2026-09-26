@@ -69,7 +69,7 @@ pub fn terminal_size() -> Size raise TerminalError {
   guard width > 0 && height > 0 else {
     raise NativeError("failed to read terminal size")
   }
-  { width, height }
+  { width, height, }
 }
 
 ///|
@@ -349,7 +349,7 @@ async fn[Model, Msg] Program::run_with_runtime_control(
     err => raise NativeError(err.to_string())
   }
   write_terminal(stop_program_output(options))
-  { model: self.model(), exit: state.exit }
+  { model: self.model(), exit: state.exit, }
 }
 
 ///|
@@ -520,7 +520,7 @@ fn safe_print_output(
         write_safe_print_text(out, value, newline)
         out.write_string(ansi_enter_alternate_screen())
         out.write_string(
-          start_program_control_output({ ..options, alternate_screen: false }),
+          start_program_control_output({ ..options, alternate_screen: false, }),
         )
         out.write_string(paint_styled_frame_ansi(frame))
         return out.to_string()

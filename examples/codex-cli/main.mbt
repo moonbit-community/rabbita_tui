@@ -113,7 +113,7 @@ fn update(
     }
     KeyPressed(Ctrl("c")) => (Cmd::quit(), model)
     KeyPressed(Escape) =>
-      (Cmd::none(), { ..model, streaming: false, status: "cancelled" })
+      (Cmd::none(), { ..model, streaming: false, status: "cancelled", })
     KeyPressed(PageUp) =>
       (Cmd::none(), scroll_by(model, page_scroll_delta(model)))
     KeyPressed(PageDown) =>
@@ -126,7 +126,7 @@ fn update(
     KeyPressed(Tab) =>
       (
         Cmd::none(),
-        { ..model, active_menu: (model.active_menu + 1) % 3, scroll_offset: 0 },
+        { ..model, active_menu: (model.active_menu + 1) % 3, scroll_offset: 0, },
       )
     KeyPressed(key) => {
       let prompt_msg : TextareaMsg = TextareaKey(key)
@@ -134,7 +134,7 @@ fn update(
       (
         Cmd::none(),
         if prompt_edit_key(key) {
-          { ..model, prompt, draft_prompt: prompt.value(), history_index: -1 }
+          { ..model, prompt, draft_prompt: prompt.value(), history_index: -1, }
         } else {
           { ..model, prompt, }
         },
@@ -151,11 +151,11 @@ fn update(
       let prompt = model.prompt.update(prompt_msg)
       (
         Cmd::none(),
-        { ..model, prompt, draft_prompt: prompt.value(), history_index: -1 },
+        { ..model, prompt, draft_prompt: prompt.value(), history_index: -1, },
       )
     }
-    FocusChanged(true) => (Cmd::none(), { ..model, status: "focused" })
-    FocusChanged(false) => (Cmd::none(), { ..model, status: "background" })
+    FocusChanged(true) => (Cmd::none(), { ..model, status: "focused", })
+    FocusChanged(false) => (Cmd::none(), { ..model, status: "background", })
     StreamChunk => {
       let (more, next) = stream_chunk_model(model)
       (if more { emit(StreamChunk) } else { Cmd::none() }, next)
@@ -166,7 +166,7 @@ fn update(
 
 ///|
 fn resize_model(size : Size, model : CodexModel) -> CodexModel {
-  clamp_scroll({ ..model, width: size.width, height: size.height })
+  clamp_scroll({ ..model, width: size.width, height: size.height, })
 }
 
 ///|
@@ -176,8 +176,8 @@ fn submit_prompt_model(model : CodexModel) -> (Bool, CodexModel) {
     return (false, model)
   }
   let transcript = model.transcript
-    .push({ role: User, text: prompt })
-    .push({ role: Assistant, text: "" })
+    .push({ role: User, text: prompt, })
+    .push({ role: Assistant, text: "", })
   let history = model.history.push(prompt)
   (
     true,
@@ -261,7 +261,7 @@ fn stream_chunk_model(model : CodexModel) -> (Bool, CodexModel) {
     "and report the result.",
   ]
   if !model.streaming || model.stream_index >= chunks.length() {
-    return (false, { ..model, streaming: false, status: "done" })
+    return (false, { ..model, streaming: false, status: "done", })
   }
   let last = model.transcript.length() - 1
   let entry = model.transcript[last]
@@ -296,7 +296,7 @@ fn view(model : CodexModel) -> Node {
   let width = content_width(model.width)
   vstack <| [
     top_bar(model, width),
-    transcript_view(model, { width, height: transcript_height }),
+    transcript_view(model, { width, height: transcript_height, }),
     activity_view(model, width),
     composer_view(model, width),
     help_view(width),
@@ -355,7 +355,7 @@ fn clamp_scroll(model : CodexModel) -> CodexModel {
 
 ///|
 fn scroll_by(model : CodexModel, delta : Int) -> CodexModel {
-  clamp_scroll({ ..model, scroll_offset: model.scroll_offset + delta })
+  clamp_scroll({ ..model, scroll_offset: model.scroll_offset + delta, })
 }
 
 ///|
@@ -376,7 +376,7 @@ fn pane_lines(model : CodexModel, width : Int) -> Array[RenderLine] {
 fn transcript_lines(model : CodexModel, width : Int) -> Array[RenderLine] {
   let lines = model.transcript
     .map(entry => {
-      [..entry_lines(entry, width), { text: "", style: Style::default() }]
+      [..entry_lines(entry, width), { text: "", style: Style::default(), }]
     })
     .to_array()
     .flatten()
@@ -431,7 +431,7 @@ fn entry_lines(entry : Entry, width : Int) -> Array[RenderLine] {
     } else {
       repeat_to_width(" ", display_width(prefix))
     }
-    { text: fit_line("\{line_prefix}\{text_part}", width), style }
+    { text: fit_line("\{line_prefix}\{text_part}", width), style, }
   })
 }
 
@@ -527,7 +527,10 @@ fn plan_lines(model : CodexModel, width : Int) -> Array[RenderLine] {
 ///|
 fn log_lines(model : CodexModel, width : Int) -> Array[RenderLine] {
   [
-    { text: fit_line("Logs · runtime", width), style: Style::default().bold() },
+    {
+      text: fit_line("Logs · runtime", width),
+      style: Style::default().bold(),
+    },
     {
       text: fit_line("────────────────", width),
       style: Style::default().fg(Ansi(238)),
@@ -603,7 +606,7 @@ fn composer_view(model : CodexModel, width : Int) -> Node {
     style=Style::default()
       .fg(if model.streaming { Ansi(11) } else { Ansi(109) })
       .border(kind=Rounded)
-      .clip({ width, height: 4 }),
+      .clip({ width, height: 4, }),
   ) <| prompt_lines(model.prompt, Int::max(1, inner - 2))
 }
 
@@ -670,10 +673,10 @@ fn help_view(width : Int) -> Node {
     plain_line(
       keymap(
         bindings=[
-          { keys: [Enter], help: "submit" },
-          { keys: [Tab], help: "menu" },
-          { keys: [Escape], help: "cancel" },
-          { keys: [Ctrl("c")], help: "quit" },
+          { keys: [Enter], help: "submit", },
+          { keys: [Tab], help: "menu", },
+          { keys: [Escape], help: "cancel", },
+          { keys: [Ctrl("c")], help: "quit", },
         ],
         width~,
       ),
@@ -740,7 +743,7 @@ fn spinner_text(frame : Int) -> String {
 
 ///|
 fn plain_line(node : Node, width : Int) -> String {
-  let lines = render_plain(node, { width, height: 1 })
+  let lines = render_plain(node, { width, height: 1, })
   if lines.is_empty() {
     repeat_to_width(" ", width)
   } else {
@@ -750,7 +753,7 @@ fn plain_line(node : Node, width : Int) -> String {
 
 ///|
 fn fallback_snapshot() -> String {
-  Frame::from_node(demo_app().view(), { width: 80, height: 24 }).to_string()
+  Frame::from_node(demo_app().view(), { width: 80, height: 24, }).to_string()
 }
 
 ///|

@@ -532,7 +532,7 @@ pub(all) struct HeadlessOptions {
 
 ///|
 pub fn HeadlessOptions::default() -> HeadlessOptions {
-  { size: { width: 80, height: 24 }, render: true, max_steps: 1000 }
+  { size: { width: 80, height: 24, }, render: true, max_steps: 1000, }
 }
 
 ///|
@@ -548,7 +548,7 @@ pub fn HeadlessOptions::render(
   self : HeadlessOptions,
   enabled : Bool,
 ) -> HeadlessOptions {
-  { ..self, render: enabled }
+  { ..self, render: enabled, }
 }
 
 ///|
@@ -556,7 +556,7 @@ pub fn HeadlessOptions::max_steps(
   self : HeadlessOptions,
   value : Int,
 ) -> HeadlessOptions {
-  { ..self, max_steps: Int::max(1, value) }
+  { ..self, max_steps: Int::max(1, value), }
 }
 
 ///|
@@ -779,7 +779,14 @@ pub async fn[Model, Msg] Program::run_headless(
       self.mark_clean()
     }
   }
-  { model: self.model(), terminal_commands, frames, quit, steps, limit_reached }
+  {
+    model: self.model(),
+    terminal_commands,
+    frames,
+    quit,
+    steps,
+    limit_reached,
+  }
 }
 
 ///|
@@ -840,5 +847,5 @@ async fn[Model, Msg] drain_headless_messages(
       None => break
     }
   }
-  { quit, steps: next_steps, limit_reached }
+  { quit, steps: next_steps, limit_reached, }
 }

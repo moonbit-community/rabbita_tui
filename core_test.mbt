@@ -115,7 +115,7 @@ async test "program step updates model and marks dirty" {
   @debug.assert_eq(program.model(), 3)
   @debug.assert_eq(program.is_dirty(), true)
   @debug.assert_eq(log, [Rendered])
-  @debug.assert_eq(render_plain(program.view(), { width: 10, height: 1 }), [
+  @debug.assert_eq(render_plain(program.view(), { width: 10, height: 1, }), [
     "count 3   ",
   ])
 }
@@ -148,10 +148,10 @@ test "subscriptions map keyboard mouse resize and tick events" {
   ])
   @debug.assert_eq(sub.map_event(Key(Enter)), [AnyEvent("key"), Rendered])
   @debug.assert_eq(
-    sub.map_event(Mouse({ button: Primary, action: Press, x: 2, y: 4 })),
+    sub.map_event(Mouse({ button: Primary, action: Press, x: 2, y: 4, })),
     [AnyEvent("mouse"), Clicked(2, 4)],
   )
-  @debug.assert_eq(sub.map_event(Resize({ width: 80, height: 24 })), [
+  @debug.assert_eq(sub.map_event(Resize({ width: 80, height: 24, })), [
     AnyEvent("resize"),
     ResizeSeen(80, 24),
   ])
@@ -179,7 +179,7 @@ test "direct subscriptions map events without optional callback results" {
     AnyEvent("keyboard"),
   ])
   @debug.assert_eq(
-    sub.map_event(Mouse({ button: Primary, action: Press, x: 2, y: 4 })),
+    sub.map_event(Mouse({ button: Primary, action: Press, x: 2, y: 4, })),
     [AnyEvent("event"), AnyEvent("mouse")],
   )
   @debug.assert_eq(sub.map_event(FocusGained), [
@@ -351,7 +351,7 @@ async test "program init and headless runner return final model frames and comma
   )
   let result = program.run_headless(
     events=[Key(Char("a"))],
-    options=HeadlessOptions::default().size({ width: 3, height: 1 }),
+    options=HeadlessOptions::default().size({ width: 3, height: 1, }),
   )
   @debug.assert_eq(result.model, 5)
   @debug.assert_eq(result.quit, true)

@@ -5,7 +5,7 @@ pub(all) struct Frame {
 
 ///|
 pub fn Frame::from_node(node : Node, size : Size) -> Frame {
-  { lines: render_plain(node, size) }
+  { lines: render_plain(node, size), }
 }
 
 ///|
@@ -561,10 +561,10 @@ fn render_styled_hstack(
     let child_lines = fit_styled_lines(
       render_styled_lines(
         child,
-        { width: child_width, height: size.height },
+        { width: child_width, height: size.height, },
         inherited,
       ),
-      { width: child_width, height: size.height },
+      { width: child_width, height: size.height, },
     )
     if child_lines.length() > height {
       height = child_lines.length()
@@ -649,7 +649,7 @@ fn render_styled_border(
     Thick => ("┏", "┓", "┗", "┛", "━", "┃")
     NoBorder => ("", "", "", "", "", "")
   }
-  let inner = { width: size.width - 2, height: size.height - 2 }
+  let inner = { width: size.width - 2, height: size.height - 2, }
   let inner_lines = fit_styled_lines(
     render_styled_lines(child, inner, inherited),
     inner,
@@ -847,12 +847,12 @@ fn align_styled_line(
 
 ///|
 fn styled_line(plain : String, style : Style) -> StyledLine {
-  { plain, ansi: styled_text(plain, style), style }
+  { plain, ansi: styled_text(plain, style), style, }
 }
 
 ///|
 fn raw_styled_line(plain : String, ansi : String) -> StyledLine {
-  { plain, ansi, style: Style::default() }
+  { plain, ansi, style: Style::default(), }
 }
 
 ///|

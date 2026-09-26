@@ -81,13 +81,13 @@ fn update(
 ) -> (Cmd, LabModel) {
   match msg {
     Resize(size) =>
-      (Cmd::none(), { ..model, width: size.width, height: size.height })
+      (Cmd::none(), { ..model, width: size.width, height: size.height, })
     Tick => update_tick(emit, model)
     KeyPressed(key) => update_key(emit, key, model)
     Pasted(value) =>
       (
         Cmd::log("paste captured: \{value}"),
-        push_event({ ..model, status: "paste" }, "paste \{value}"),
+        push_event({ ..model, status: "paste", }, "paste \{value}"),
       )
     FocusChanged(focused) => update_focus(focused, model)
     MouseSeen(mouse) => update_mouse(mouse, model)
@@ -96,13 +96,13 @@ fn update(
     SuspendedDone =>
       (
         Cmd::log("suspended async section returned to the TUI"),
-        push_event({ ..model, status: "suspend returned" }, "suspend returned"),
+        push_event({ ..model, status: "suspend returned", }, "suspend returned"),
       )
     ExecDone(code) =>
       (
         Cmd::log("external command exited with \{code}"),
         push_event(
-          { ..model, status: "exec exited \{code}" },
+          { ..model, status: "exec exited \{code}", },
           "exec process exit \{code}",
         ),
       )
@@ -111,15 +111,15 @@ fn update(
 
 ///|
 fn update_tick(emit : Emit[LabMsg], model : LabModel) -> (Cmd, LabModel) {
-  let model = { ..model, spinner: model.spinner + 1 }
+  let model = { ..model, spinner: model.spinner + 1, }
   if model.timeout_left <= 0 {
     return (Cmd::none(), model)
   }
   let left = model.timeout_left - 1
   if left == 0 && model.running_job > 0 {
-    (emit(TimeoutFinished(model.running_job)), { ..model, timeout_left: 0 })
+    (emit(TimeoutFinished(model.running_job)), { ..model, timeout_left: 0, })
   } else {
-    (Cmd::none(), { ..model, timeout_left: left })
+    (Cmd::none(), { ..model, timeout_left: left, })
   }
 }
 
@@ -129,7 +129,7 @@ fn update_key(
   key : Key,
   model : LabModel,
 ) -> (Cmd, LabModel) {
-  let model = { ..model, last_key: key_label(key) }
+  let model = { ..model, last_key: key_label(key), }
   match key {
     Char("q") | Ctrl("c") => (Cmd::quit(), model)
     Up => (Cmd::none(), select_scenario(model, -1))
@@ -146,7 +146,7 @@ fn update_key(
         _ => -1
       }
       if index >= 0 {
-        update_scenario(emit, index, { ..model, selected: index })
+        update_scenario(emit, index, { ..model, selected: index, })
       } else {
         record_key(key, model)
       }
@@ -169,7 +169,7 @@ fn update_scenario(
           Cmd::err_log("safe stderr: diagnostics can use the same path"),
         ]),
         push_event(
-          { ..model, status: "safe output" },
+          { ..model, status: "safe output", },
           "safe stdout/stderr emitted",
         ),
       )
@@ -177,7 +177,7 @@ fn update_scenario(
       (
         Cmd::exec_process_with_args("true", [], code => emit(ExecDone(code))),
         push_event(
-          { ..model, status: "exec process running" },
+          { ..model, status: "exec process running", },
           "exec process started",
         ),
       )
@@ -188,7 +188,7 @@ fn update_scenario(
           emit(SuspendedDone)
         }),
         push_event(
-          { ..model, status: "raw mode suspended" },
+          { ..model, status: "raw mode suspended", },
           "suspend block started",
         ),
       )
@@ -232,7 +232,7 @@ fn update_scenario(
         (
           Cmd::log("cancelled job \{model.running_job}"),
           push_event(
-            { ..model, running_job: 0, timeout_left: 0, status: "cancelled" },
+            { ..model, running_job: 0, timeout_left: 0, status: "cancelled", },
             "job cancelled by model token",
           ),
         )
@@ -240,7 +240,7 @@ fn update_scenario(
         (
           Cmd::none(),
           push_event(
-            { ..model, status: "nothing to cancel" },
+            { ..model, status: "nothing to cancel", },
             "no running job to cancel",
           ),
         )
@@ -249,7 +249,7 @@ fn update_scenario(
       (
         Cmd::none(),
         push_event(
-          { ..model, selected: 6, status: "keyboard input" },
+          { ..model, selected: 6, status: "keyboard input", },
           "keyboard protocol scenario selected",
         ),
       )
@@ -261,7 +261,7 @@ fn record_key(key : Key, model : LabModel) -> (Cmd, LabModel) {
   (
     Cmd::none(),
     push_event(
-      { ..model, selected: 6, status: "keyboard input" },
+      { ..model, selected: 6, status: "keyboard input", },
       "key \{key_label(key)}",
     ),
   )
@@ -272,10 +272,10 @@ fn update_focus(focused : Bool, model : LabModel) -> (Cmd, LabModel) {
   if focused {
     (
       Cmd::none(),
-      push_event({ ..model, status: "focus gained" }, "focus gained"),
+      push_event({ ..model, status: "focus gained", }, "focus gained"),
     )
   } else {
-    (Cmd::none(), push_event({ ..model, status: "focus lost" }, "focus lost"))
+    (Cmd::none(), push_event({ ..model, status: "focus lost", }, "focus lost"))
   }
 }
 
@@ -284,7 +284,7 @@ fn update_mouse(mouse : Mouse, model : LabModel) -> (Cmd, LabModel) {
   (
     Cmd::none(),
     push_event(
-      { ..model, status: "mouse" },
+      { ..model, status: "mouse", },
       "mouse \{mouse_button(mouse.button)} at \{mouse.x},\{mouse.y}",
     ),
   )
@@ -296,7 +296,7 @@ fn update_job_finished(id : Int, model : LabModel) -> (Cmd, LabModel) {
     (
       Cmd::log("async job \{id} completed safely"),
       push_event(
-        { ..model, running_job: 0, status: "job completed" },
+        { ..model, running_job: 0, status: "job completed", },
         "job \{id} completed",
       ),
     )
@@ -311,7 +311,7 @@ fn update_timeout_finished(id : Int, model : LabModel) -> (Cmd, LabModel) {
     (
       Cmd::none(),
       push_event(
-        { ..model, running_job: 0, timeout_left: 0, status: "timed out" },
+        { ..model, running_job: 0, timeout_left: 0, status: "timed out", },
         "job \{id} timed out",
       ),
     )
@@ -353,7 +353,7 @@ fn view(model : LabModel) -> Node {
 ///|
 fn header(model : LabModel, width : Int) -> Node {
   let spinner = first_line(
-    render_plain(spinner(model.spinner), { width: 1, height: 1 }),
+    render_plain(spinner(model.spinner), { width: 1, height: 1, }),
   )
   text(
     style=Style::default().fg(Rgb(235, 245, 255)).bg(Rgb(30, 74, 96)).bold(),
@@ -460,7 +460,7 @@ fn select_scenario(model : LabModel, delta : Int) -> LabModel {
     0,
     Int::min(scenario_count() - 1, model.selected + delta),
   )
-  { ..model, selected, status: "choose a scenario" }
+  { ..model, selected, status: "choose a scenario", }
 }
 
 ///|
@@ -506,7 +506,7 @@ fn scenario_summary(index : Int) -> String {
 ///|
 fn push_event(model : LabModel, event : String) -> LabModel {
   let next = model.events.push(event)
-  { ..model, events: next.drop(Int::max(0, next.length() - 7)) }
+  { ..model, events: next.drop(Int::max(0, next.length() - 7)), }
 }
 
 ///|
@@ -613,7 +613,7 @@ fn first_line(lines : Array[String]) -> String {
 
 ///|
 fn fallback_snapshot() -> String {
-  Frame::from_node(app().view(), { width: 80, height: 22 }).to_string()
+  Frame::from_node(app().view(), { width: 80, height: 22, }).to_string()
 }
 
 ///|

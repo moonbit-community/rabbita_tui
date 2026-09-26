@@ -26,8 +26,8 @@ test "counter updates count step and reset from keys" {
 test "counter subscriptions map keys and resize directly" {
   let sub = subscriptions(initial_model())
   @debug.assert_eq(sub.map_event(Key(Char("+"))), [KeyPressed(Char("+"))])
-  @debug.assert_eq(sub.map_event(Resize({ width: 90, height: 22 })), [
-    Resize({ width: 90, height: 22 }),
+  @debug.assert_eq(sub.map_event(Resize({ width: 90, height: 22, })), [
+    Resize({ width: 90, height: 22, }),
   ])
   @debug.assert_eq(sub.map_event(FocusGained), [])
 }
@@ -35,12 +35,12 @@ test "counter subscriptions map keys and resize directly" {
 ///|
 test "counter layout fits common terminal sizes" {
   let sizes : Array[Size] = [
-    { width: 36, height: 12 },
-    { width: 72, height: 18 },
-    { width: 100, height: 24 },
+    { width: 36, height: 12, },
+    { width: 72, height: 18, },
+    { width: 100, height: 24, },
   ]
   for size in sizes {
-    let model = { ..initial_model(), width: size.width, height: size.height }
+    let model = { ..initial_model(), width: size.width, height: size.height, }
     let frame = Frame::from_node(view(model), size)
     @debug.assert_eq(frame.lines.length(), size.height)
     for line in frame.lines {
@@ -52,7 +52,7 @@ test "counter layout fits common terminal sizes" {
 ///|
 test "counter snapshot includes controls and current state" {
   let (_, model) = update(emit_stub(), KeyPressed(Char("+")), initial_model())
-  let snapshot = Frame::from_node(view(model), { width: 72, height: 18 }).to_string()
+  let snapshot = Frame::from_node(view(model), { width: 72, height: 18, }).to_string()
   assert_true(snapshot.contains("Counter"))
   assert_true(snapshot.contains("step 1"))
   assert_true(snapshot.contains("increment"))

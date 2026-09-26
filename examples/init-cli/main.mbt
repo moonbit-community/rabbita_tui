@@ -114,7 +114,7 @@ fn update(
       match model.step {
         Name =>
           if project_name(model) == "" {
-            (Cmd::none(), { ..model, status: "project name is required" })
+            (Cmd::none(), { ..model, status: "project name is required", })
           } else {
             (Cmd::none(), step_to(model, Template))
           }
@@ -154,12 +154,12 @@ fn update(
         } else {
           (
             delay(emit(GenerateTick), 140),
-            { ..model, progress: next, spinner: model.spinner + 1 },
+            { ..model, progress: next, spinner: model.spinner + 1, },
           )
         }
       }
     Resize(size) =>
-      (Cmd::none(), { ..model, width: size.width, height: size.height })
+      (Cmd::none(), { ..model, width: size.width, height: size.height, })
   }
 }
 
@@ -168,11 +168,11 @@ fn edit_current(key : Key, model : InitModel) -> InitModel {
   match model.step {
     Name => {
       let msg : TextInputMsg = TextInputKey(key)
-      { ..model, project_name: model.project_name.update(msg) }
+      { ..model, project_name: model.project_name.update(msg), }
     }
     Author => {
       let msg : TextInputMsg = TextInputKey(key)
-      { ..model, author: model.author.update(msg) }
+      { ..model, author: model.author.update(msg), }
     }
     _ => model
   }
@@ -183,11 +183,11 @@ fn paste_current(value : String, model : InitModel) -> InitModel {
   match model.step {
     Name => {
       let msg : TextInputMsg = TextInputKey(Char(value))
-      { ..model, project_name: model.project_name.update(msg) }
+      { ..model, project_name: model.project_name.update(msg), }
     }
     Author => {
       let msg : TextInputMsg = TextInputKey(Char(value))
-      { ..model, author: model.author.update(msg) }
+      { ..model, author: model.author.update(msg), }
     }
     _ => model
   }
@@ -198,11 +198,11 @@ fn move_current(model : InitModel, delta : Int) -> InitModel {
   match model.step {
     Template => {
       let msg : ListMsg = ListMove(delta, list_height(model))
-      { ..model, template: model.template.update(msg) }
+      { ..model, template: model.template.update(msg), }
     }
     Package => {
       let msg : ListMsg = ListMove(delta, list_height(model))
-      { ..model, package_manager: model.package_manager.update(msg) }
+      { ..model, package_manager: model.package_manager.update(msg), }
     }
     Features => {
       let count = feature_names().length()
@@ -216,7 +216,7 @@ fn move_current(model : InitModel, delta : Int) -> InitModel {
     }
     License => {
       let msg : ListMsg = ListMove(delta, list_height(model))
-      { ..model, license: model.license.update(msg) }
+      { ..model, license: model.license.update(msg), }
     }
     _ => model
   }
@@ -261,17 +261,17 @@ fn previous_step(model : InitModel) -> InitModel {
 ///|
 fn reset_model(model : InitModel) -> InitModel {
   let fresh = initial_model()
-  { ..fresh, width: model.width, height: model.height }
+  { ..fresh, width: model.width, height: model.height, }
 }
 
 ///|
 fn step_to(model : InitModel, step : InitStep) -> InitModel {
-  { ..model, step, status: step_status(step) }
+  { ..model, step, status: step_status(step), }
 }
 
 ///|
 fn start_generating_model(model : InitModel) -> InitModel {
-  { ..model, step: Generating, progress: 0, spinner: 0, status: "scaffolding" }
+  { ..model, step: Generating, progress: 0, spinner: 0, status: "scaffolding", }
 }
 
 ///|
@@ -284,7 +284,7 @@ fn view(model : InitModel) -> Node {
     sized(
       width~,
       height=body_height,
-      body_view(model, { width, height: body_height }),
+      body_view(model, { width, height: body_height, }),
     ),
     help_view(model, width),
   ]
@@ -331,20 +331,20 @@ fn body_view(model : InitModel, size : Size) -> Node {
       sized(
         width=size.width / 2,
         height=size.height,
-        question_view(model, { width: size.width / 2, height: size.height }),
+        question_view(model, { width: size.width / 2, height: size.height, }),
       ),
       sized(
         width=size.width / 2,
         height=size.height,
-        preview_view(model, { width: size.width / 2, height: size.height }),
+        preview_view(model, { width: size.width / 2, height: size.height, }),
       ),
     ]
   } else if size.height >= 14 {
     let preview_height = clamp(6, 9, size.height / 3 + 2)
     let question_height = Int::max(1, size.height - preview_height - 1)
     vstack(gap=1) <| [
-      question_view(model, { width: size.width, height: question_height }),
-      preview_view(model, { width: size.width, height: preview_height }),
+      question_view(model, { width: size.width, height: question_height, }),
+      preview_view(model, { width: size.width, height: preview_height, }),
     ]
   } else {
     question_view(model, size)
@@ -562,8 +562,8 @@ fn selectable_line(
 fn summary_table(model : InitModel, width : Int) -> Node {
   table(
     columns=[
-      { title: "Field", width: 12 },
-      { title: "Value", width: Int::max(16, width - 18) },
+      { title: "Field", width: 12, },
+      { title: "Value", width: Int::max(16, width - 18), },
     ],
     rows=[
       ["Name", project_name(model)],
@@ -573,7 +573,7 @@ fn summary_table(model : InitModel, width : Int) -> Node {
       ["License", selected_license(model)],
       ["Features", selected_features_label(model)],
     ],
-    size={ width, height: 8 },
+    size={ width, height: 8, },
   )
 }
 
@@ -603,31 +603,31 @@ fn help_view(model : InitModel, width : Int) -> Node {
   let help = if model.step == Features {
     keymap(
       bindings=[
-        { keys: [Up, Down], help: "move" },
-        { keys: [Char(" ")], help: "toggle" },
-        { keys: [Enter], help: "next" },
-        { keys: [Escape], help: "back" },
-        { keys: [Ctrl("c")], help: "quit" },
+        { keys: [Up, Down], help: "move", },
+        { keys: [Char(" ")], help: "toggle", },
+        { keys: [Enter], help: "next", },
+        { keys: [Escape], help: "back", },
+        { keys: [Ctrl("c")], help: "quit", },
       ],
       width~,
     )
   } else if model.step == Done {
     keymap(
       bindings=[
-        { keys: [Enter], help: "restart" },
-        { keys: [Escape], help: "review" },
-        { keys: [Ctrl("c")], help: "quit" },
+        { keys: [Enter], help: "restart", },
+        { keys: [Escape], help: "review", },
+        { keys: [Ctrl("c")], help: "quit", },
       ],
       width~,
     )
   } else {
     keymap(
       bindings=[
-        { keys: [Enter], help: "next" },
-        { keys: [Up, Down], help: "select" },
-        { keys: [Tab], help: "skip" },
-        { keys: [Escape], help: "back" },
-        { keys: [Ctrl("c")], help: "quit" },
+        { keys: [Enter], help: "next", },
+        { keys: [Up, Down], help: "select", },
+        { keys: [Tab], help: "skip", },
+        { keys: [Escape], help: "back", },
+        { keys: [Ctrl("c")], help: "quit", },
       ],
       width~,
     )
@@ -875,7 +875,7 @@ fn spinner_text(frame : Int) -> String {
 
 ///|
 fn line_text(node : Node, width : Int) -> String {
-  let lines = render_plain(node, { width, height: 1 })
+  let lines = render_plain(node, { width, height: 1, })
   if lines.is_empty() {
     repeat_to_width(" ", width)
   } else {
@@ -942,7 +942,7 @@ fn subscriptions(_model : InitModel) -> Sub[InitMsg] {
 
 ///|
 fn fallback_snapshot() -> String {
-  Frame::from_node(demo_app().view(), { width: 80, height: 24 }).to_string()
+  Frame::from_node(demo_app().view(), { width: 80, height: 24, }).to_string()
 }
 
 ///|

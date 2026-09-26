@@ -107,7 +107,7 @@ struct Model {
 
 ///|
 fn initial_model() -> Model {
-  { count: 0, width: 80, height: 24 }
+  { count: 0, width: 80, height: 24, }
 }
 
 ///|
@@ -115,13 +115,13 @@ fn update(_emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
   match msg {
     KeyPressed(key) =>
       match key {
-        Up => (Cmd::none(), { ..model, count: model.count + 1 })
-        Down => (Cmd::none(), { ..model, count: model.count - 1 })
+        Up => (Cmd::none(), { ..model, count: model.count + 1, })
+        Down => (Cmd::none(), { ..model, count: model.count - 1, })
         Char("q") | Ctrl("c") => (Cmd::quit(), model)
         _ => (Cmd::none(), model)
       }
     Resize(size) =>
-      (Cmd::none(), { ..model, width: size.width, height: size.height })
+      (Cmd::none(), { ..model, width: size.width, height: size.height, })
     Quit => (Cmd::quit(), model)
   }
 }
@@ -132,8 +132,8 @@ fn view(model : Model) -> Node {
   let body = text("count = \{model.count}")
   let help = text("up/down change  q quit")
   let card = vstack(gap=1) <| [
-      title, body, help,
-    ]
+    title, body, help,
+  ]
   vstack <| [
     status_line(
       left="counter",
@@ -161,7 +161,7 @@ async fn main {
   ) catch {
     NotATty(_) =>
       println(
-        Frame::from_node(view(initial_model()), { width: 80, height: 24 }).to_string(),
+        Frame::from_node(view(initial_model()), { width: 80, height: 24, }).to_string(),
       )
     NativeError(message) => println("terminal error: \{message}")
     UnsupportedPlatform => println("native POSIX terminal required")
@@ -224,11 +224,11 @@ It returns `(Cmd, Model)`.
 fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
   match msg {
     Submitted =>
-      (delay(emit(Loaded(Ok("done"))), 300), { ..model, status: "loading" })
+      (delay(emit(Loaded(Ok("done"))), 300), { ..model, status: "loading", })
     Loaded(result) =>
       match result {
-        Ok(value) => (Cmd::none(), { ..model, status: value })
-        Err(_) => (Cmd::none(), { ..model, status: "failed" })
+        Ok(value) => (Cmd::none(), { ..model, status: value, })
+        Err(_) => (Cmd::none(), { ..model, status: "failed", })
       }
     Quit => (Cmd::quit(), model)
     _ => (Cmd::none(), model)
@@ -311,8 +311,9 @@ Example: delayed follow-up message.
 ///|
 fn update(emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
   match msg {
-    StartTimer => (delay(emit(TimerDone), 1000), { ..model, status: "waiting" })
-    TimerDone => (Cmd::none(), { ..model, status: "done" })
+    StartTimer =>
+      (delay(emit(TimerDone), 1000), { ..model, status: "waiting", })
+    TimerDone => (Cmd::none(), { ..model, status: "done", })
   }
 }
 ```
@@ -479,7 +480,7 @@ model in `view` and should not be stored in the model:
 ```moonbit nocheck
 ///|
 fn initial_model() -> Model {
-  { input: TextInput(placeholder="Search"), completed: 0, total: 4 }
+  { input: TextInput(placeholder="Search"), completed: 0, total: 4, }
 }
 ```
 
@@ -491,8 +492,8 @@ fn view(model : Model) -> Node {
     progress(current=model.completed, total=model.total, width=model.width),
     keymap(
       bindings=[
-        { keys: [Enter], help: "submit" },
-        { keys: [Ctrl("c")], help: "quit" },
+        { keys: [Enter], help: "submit", },
+        { keys: [Ctrl("c")], help: "quit", },
       ],
       width=model.width,
     ),
@@ -508,9 +509,9 @@ fn update(_emit : Emit[Msg], msg : Msg, model : Model) -> (Cmd, Model) {
   match msg {
     KeyPressed(key) => {
       let input_msg : TextInputMsg = TextInputKey(key)
-      (Cmd::none(), { ..model, input: model.input.update(input_msg) })
+      (Cmd::none(), { ..model, input: model.input.update(input_msg), })
     }
-    Submitted => (Cmd::none(), { ..model, saved: model.input.value })
+    Submitted => (Cmd::none(), { ..model, saved: model.input.value, })
   }
 }
 ```
@@ -542,7 +543,7 @@ terminal.
 async test "counter increments" {
   let result = app().run_headless(
     events=[Key(Up), Key(Up)],
-    options=HeadlessOptions::default().size({ width: 40, height: 10 }),
+    options=HeadlessOptions::default().size({ width: 40, height: 10, }),
   )
   @debug.assert_eq(result.model.count, 2)
   @debug.assert_eq(result.frames.length() > 0, true)

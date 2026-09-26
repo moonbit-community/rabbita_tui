@@ -39,11 +39,11 @@ async fn scripted_snapshot() -> String {
   let app = demo_app()
   let log : Array[CodexMsg] = []
   let emit = test_emit(log)
-  ignore(app.step(emit, Resize({ width: 64, height: 24 })))
+  ignore(app.step(emit, Resize({ width: 64, height: 24, })))
   ignore(app.step(emit, KeyPressed(Char("h"))))
   ignore(app.step(emit, KeyPressed(Char("i"))))
   drain_cmd(app, emit, log, app.step(emit, KeyPressed(Enter)))
-  Frame::from_node(app.view(), { width: 64, height: 24 }).to_string()
+  Frame::from_node(app.view(), { width: 64, height: 24, }).to_string()
 }
 
 ///|
@@ -59,7 +59,7 @@ async test "scripted codex cli snapshot contains streaming result" {
 async test "codex cli layout fits common terminal widths and scrolls to latest content" {
   for width in [40, 64, 80, 120] {
     let model = resized_scripted_model(width, 18)
-    let frame = Frame::from_node(view(model), { width, height: 18 })
+    let frame = Frame::from_node(view(model), { width, height: 18, })
     @debug.assert_eq(frame.lines.length(), 18)
     for line in frame.lines {
       assert_true(display_width(line) <= width)
@@ -70,7 +70,7 @@ async test "codex cli layout fits common terminal widths and scrolls to latest c
     assert_true(text.contains("result."))
   }
   let long = model_with_many_entries(40, 14)
-  let snapshot = Frame::from_node(view(long), { width: 40, height: 14 }).to_string()
+  let snapshot = Frame::from_node(view(long), { width: 40, height: 14, }).to_string()
   assert_true(snapshot.contains("latest visible line"))
   assert_true(!snapshot.contains("old hidden line 0"))
 }
@@ -80,10 +80,10 @@ async test "codex cli view keeps a stable repaint height" {
   let log : Array[CodexMsg] = []
   let emit = test_emit(log)
   let model = initial_model()
-  let frame = Frame::from_node(view(model), { width: 80, height: 24 })
+  let frame = Frame::from_node(view(model), { width: 80, height: 24, })
   @debug.assert_eq(frame.lines.length(), live_height(model))
   let (_, typed) = update(emit, KeyPressed(Char("x")), model)
-  let typed_frame = Frame::from_node(view(typed), { width: 80, height: 24 })
+  let typed_frame = Frame::from_node(view(typed), { width: 80, height: 24, })
   @debug.assert_eq(typed_frame.lines.length(), live_height(typed))
   let (cmd, submitted) = update(emit, KeyPressed(Enter), typed)
   cmd.run()
@@ -107,12 +107,12 @@ test "codex cli transcript scroll helpers clamp page keys and wheel events" {
   let long = model_with_many_entries(40, 14)
   let (_, page_up) = update(emit, KeyPressed(PageUp), long)
   assert_true(page_up.scroll_offset > 0)
-  let page_snapshot = Frame::from_node(view(page_up), { width: 40, height: 14 }).to_string()
+  let page_snapshot = Frame::from_node(view(page_up), { width: 40, height: 14, }).to_string()
   assert_true(page_snapshot.contains("scroll"))
   assert_true(!page_snapshot.contains("latest visible line"))
   let (_, wheel_up) = update(
     emit,
-    MouseSeen({ button: WheelUp, action: Press, x: 2, y: 6 }),
+    MouseSeen({ button: WheelUp, action: Press, x: 2, y: 6, }),
     page_up,
   )
   assert_true(wheel_up.scroll_offset > page_up.scroll_offset)
@@ -120,8 +120,8 @@ test "codex cli transcript scroll helpers clamp page keys and wheel events" {
   assert_true(page_down.scroll_offset < wheel_up.scroll_offset)
   let (_, bottom) = update(
     emit,
-    MouseSeen({ button: WheelDown, action: Press, x: 2, y: 6 }),
-    { ..page_down, scroll_offset: 1 },
+    MouseSeen({ button: WheelDown, action: Press, x: 2, y: 6, }),
+    { ..page_down, scroll_offset: 1, },
   )
   @debug.assert_eq(bottom.scroll_offset, 0)
 }
@@ -134,7 +134,7 @@ test "codex cli keeps manual scroll position while streaming" {
   assert_true(page_up.scroll_offset > 0)
   let streaming = {
     ..page_up,
-    transcript: page_up.transcript.push({ role: Assistant, text: "" }),
+    transcript: page_up.transcript.push({ role: Assistant, text: "", }),
     streaming: true,
     stream_index: 0,
   }
@@ -145,10 +145,10 @@ test "codex cli keeps manual scroll position while streaming" {
 ///|
 test "codex cli transcript scroll clamps across resize" {
   let emit = emit_stub()
-  let long = { ..model_with_many_entries(44, 12), scroll_offset: 1000 }
+  let long = { ..model_with_many_entries(44, 12), scroll_offset: 1000, }
   let clamped = clamp_scroll(long)
   @debug.assert_eq(clamped.scroll_offset, max_scroll_offset(clamped))
-  let (_, resized) = update(emit, Resize({ width: 44, height: 28 }), clamped)
+  let (_, resized) = update(emit, Resize({ width: 44, height: 28, }), clamped)
   assert_true(resized.scroll_offset <= max_scroll_offset(resized))
 }
 
@@ -156,9 +156,9 @@ test "codex cli transcript scroll clamps across resize" {
 test "codex cli menus and ansi output show foreground and background styling" {
   let emit = emit_stub()
   let app = demo_app()
-  ignore(app.step(emit, Resize({ width: 80, height: 18 })))
+  ignore(app.step(emit, Resize({ width: 80, height: 18, })))
   ignore(app.step(emit, KeyPressed(Tab)))
-  let frame = Frame::from_node(app.view(), { width: 80, height: 18 })
+  let frame = Frame::from_node(app.view(), { width: 80, height: 18, })
   assert_true(frame.to_string().contains("[plan]"))
   let output = ansi_start_program(ProgramOptions::inline(), app.view(), {
     width: 80,
@@ -166,12 +166,12 @@ test "codex cli menus and ansi output show foreground and background styling" {
   })
   let chat_output = ansi_start_program(
     ProgramOptions::inline(),
-    view({ ..initial_model(), width: 80, height: 18 }),
-    { width: 80, height: 18 },
+    view({ ..initial_model(), width: 80, height: 18, }),
+    { width: 80, height: 18, },
   )
   let streaming_output = render_ansi(
-    activity_view({ ..initial_model(), streaming: true, stream_index: 2 }, 80),
-    { width: 80, height: 1 },
+    activity_view({ ..initial_model(), streaming: true, stream_index: 2, }, 80),
+    { width: 80, height: 1, },
   )
   assert_true(output.contains("48;5;250"))
   assert_true(streaming_output.contains("48;5;153"))
@@ -201,7 +201,7 @@ test "codex cli diff stays inside the chat viewport" {
 
 ///|
 test "codex cli clips narrow diff lines instead of wrapping code tokens" {
-  let lines = pane_lines({ ..initial_model(), width: 60 }, content_width(60))
+  let lines = pane_lines({ ..initial_model(), width: 60, }, content_width(60))
   let mut hunk_lines = 0
   for line in lines {
     if line.text.contains("@@ -7") {
@@ -223,7 +223,7 @@ test "codex cli composer does not paint a black half-background" {
 
 ///|
 test "cancel stops streaming" {
-  let model = { ..initial_model(), streaming: true, status: "streaming" }
+  let model = { ..initial_model(), streaming: true, status: "streaming", }
   let (_, next) = update(emit_stub(), KeyPressed(Escape), model)
   @debug.assert_eq(next.streaming, false)
   @debug.assert_eq(next.status, "cancelled")
@@ -244,11 +244,11 @@ test "event handling edits prompt submits cancels and resizes" {
   let (empty_submit, model7) = update(emit, KeyPressed(Enter), model6)
   @debug.assert_eq(empty_submit.is_none(), true)
   @debug.assert_eq(model7.streaming, false)
-  let (_, resized) = update(emit, Resize({ width: 40, height: 12 }), model7)
+  let (_, resized) = update(emit, Resize({ width: 40, height: 12, }), model7)
   @debug.assert_eq((resized.width, resized.height), (40, 12))
   let (_, unchanged) = update(
     emit,
-    MouseSeen({ button: Primary, action: Release, x: 1, y: 1 }),
+    MouseSeen({ button: Primary, action: Release, x: 1, y: 1, }),
     resized,
   )
   @debug.assert_eq(unchanged, resized)
@@ -308,7 +308,7 @@ async fn resized_scripted_model(width : Int, height : Int) -> CodexModel {
   let log : Array[CodexMsg] = []
   let emit = test_emit(log)
   let app = demo_app()
-  ignore(app.step(emit, Resize({ width, height })))
+  ignore(app.step(emit, Resize({ width, height, })))
   for char in "please inspect the repository and fix failing tests" {
     ignore(app.step(emit, KeyPressed(Char(char.to_string()))))
   }
@@ -325,8 +325,8 @@ fn model_with_many_entries(width : Int, height : Int) -> CodexModel {
       text: "old hidden line \{index}",
     })
   }
-  transcript = transcript.push({ role: Assistant, text: "latest visible line" })
-  { ..initial_model(), transcript, width, height }
+  transcript = transcript.push({ role: Assistant, text: "latest visible line", })
+  { ..initial_model(), transcript, width, height, }
 }
 
 ///|
@@ -334,7 +334,7 @@ async test "submit and stream guard branches are deterministic" {
   let log : Array[CodexMsg] = []
   let emit = test_emit(log)
   let base = initial_model()
-  let ready = { ..base, prompt: base.prompt.update(TextareaSet("run tests")) }
+  let ready = { ..base, prompt: base.prompt.update(TextareaSet("run tests")), }
   let (cmd, submitted) = update(emit, KeyPressed(Enter), ready)
   cmd.run()
   @debug.assert_eq(log, [StreamChunk])
@@ -364,7 +364,7 @@ test "subscriptions map terminal events to codex messages" {
       y: 1,
     }),
   ])
-  @debug.assert_eq(sub.map_event(Resize({ width: 10, height: 5 })), [
-    Resize({ width: 10, height: 5 }),
+  @debug.assert_eq(sub.map_event(Resize({ width: 10, height: 5, })), [
+    Resize({ width: 10, height: 5, }),
   ])
 }

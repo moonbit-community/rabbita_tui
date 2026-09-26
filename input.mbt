@@ -14,7 +14,7 @@ let max_pending_input_bytes = 4096
 
 ///|
 fn InputDecoder::new() -> InputDecoder {
-  { pending: b"" }
+  { pending: b"", }
 }
 
 ///|
@@ -45,7 +45,7 @@ fn InputDecoder::feed(
   }
   if pending.length() > max_pending_input_bytes {
     events.push(UnknownEvent("incomplete input exceeded 4096 bytes"))
-    (events, { pending: b"" })
+    (events, { pending: b"", })
   } else {
     (events, { pending, })
   }
@@ -53,7 +53,7 @@ fn InputDecoder::feed(
 
 ///|
 fn InputDecoder::flush(self : InputDecoder) -> (Array[Event], InputDecoder) {
-  (parse_input(self.pending), { pending: b"" })
+  (parse_input(self.pending), { pending: b"", })
 }
 
 ///|

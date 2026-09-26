@@ -5,12 +5,12 @@ using @tui {type HeadlessOptions}
 fn scripted_snapshot() -> String {
   let demo = app()
   let emit = Emit::new(_ => ())
-  ignore(demo.step(emit, Resize({ width: 80, height: 22 })))
+  ignore(demo.step(emit, Resize({ width: 80, height: 22, })))
   ignore(demo.step(emit, KeyPressed(Char("p"))))
   ignore(
     demo.step(emit, KeyPressed(Modified(Up, KeyModifiers::none().shift(true)))),
   )
-  Frame::from_node(demo.view(), { width: 80, height: 22 }).to_string()
+  Frame::from_node(demo.view(), { width: 80, height: 22, }).to_string()
 }
 
 ///|
@@ -24,7 +24,7 @@ test "runtime lab snapshot teaches core controls" {
 async test "runtime lab headless commands cover suspend exec and timeout" {
   let result = app().run_headless(
     events=[Key(Char("s")), Key(Char("x")), Key(Char("t"))],
-    options=HeadlessOptions::default().size({ width: 82, height: 22 }),
+    options=HeadlessOptions::default().size({ width: 82, height: 22, }),
   )
   let events = join(result.model.events.to_array(), " ")
   assert_true(events.contains("suspend returned"))

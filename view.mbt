@@ -68,7 +68,7 @@ pub fn sized(
   style? : Style = Style::default(),
   node : Node,
 ) -> Node {
-  apply_style(Sized(node, { width, height }), style)
+  apply_style(Sized(node, { width, height, }), style)
 }
 
 ///|
@@ -138,10 +138,10 @@ fn apply_layout_style(node : Node, style : Style) -> Node {
     out = Aligned(out, style.align_horizontal, style.align_vertical)
   }
   if style.width >= 0 || style.height >= 0 {
-    out = Sized(out, { width: style.width, height: style.height })
+    out = Sized(out, { width: style.width, height: style.height, })
   }
   if style.clip_width >= 0 && style.clip_height >= 0 {
-    out = Clip(out, { width: style.clip_width, height: style.clip_height })
+    out = Clip(out, { width: style.clip_width, height: style.clip_height, })
   }
   out
 }
@@ -301,10 +301,10 @@ fn render_hstack(
     let child_lines = fit_lines(
       render_lines(
         child,
-        { width: child_width, height: size.height },
+        { width: child_width, height: size.height, },
         inherited,
       ),
-      { width: child_width, height: size.height },
+      { width: child_width, height: size.height, },
     )
     if child_lines.length() > height {
       height = child_lines.length()
@@ -375,7 +375,7 @@ fn render_border(
     Thick => ("┏", "┓", "┗", "┛", "━", "┃")
     NoBorder => ("", "", "", "", "", "")
   }
-  let inner = { width: size.width - 2, height: size.height - 2 }
+  let inner = { width: size.width - 2, height: size.height - 2, }
   let inner_lines = fit_lines(render_lines(child, inner, inherited), inner)
   let out : Array[String] = []
   out.push("\{tl}\{repeat_to_width(horizontal, inner.width)}\{tr}")
