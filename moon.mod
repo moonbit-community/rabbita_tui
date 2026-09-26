@@ -3,7 +3,7 @@ name = "moonbit-community/rabbita_tui"
 version = "0.1.0"
 
 import {
-  "moonbitlang/async@0.17.0",
+  "moonbitlang/async@0.19.0",
 }
 
 options(
