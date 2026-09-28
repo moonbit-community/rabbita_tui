@@ -235,6 +235,12 @@ async fn[Model, Msg] Program::run_with_runtime_control(
   }) catch {
     err => raise NativeError(err.to_string())
   }
+  // Undo the start-program output (alternate screen, hidden cursor, mouse,
+  // bracketed paste, focus events, autowrap) when leaving by error or
+  // cancellation. `catch` no longer observes cancellation, so this cannot
+  // live in the task-group handler below. `write_terminal` is a synchronous
+  // FFI write, so it completes even while the task is being cancelled.
+  errdefer (write_terminal(stop_program_output(options)) catch { _ => () })
   if options.renderer_enabled {
     let initial_view = self.view()
     let initial_frame = StyledFrame::from_node(initial_view, state.current_size)
@@ -345,7 +351,6 @@ async fn[Model, Msg] Program::run_with_runtime_control(
       }
     }
   }) catch {
-    err if @async.is_cancellation_error(err) => ()
     err => raise NativeError(err.to_string())
   }
   write_terminal(stop_program_output(options))
@@ -724,13 +729,14 @@ async fn[Model, Msg] run_suspended_task(
   task : async () -> Cmd,
 ) -> Cmd raise TerminalError {
   suspend_terminal(options, state)
-  let msg = task() catch {
-    err => {
-      resume_terminal(program, options, state) catch {
-        _ => ()
-      }
-      raise NativeError(err.to_string())
-    }
+  let msg = try {
+    // Re-enter the TUI on error *and* cancellation so the caller's cleanup
+    // (stop-program output + restore) sees a consistent terminal state.
+    // `resume_terminal` is synchronous, so no cancellation protection needed.
+    errdefer (resume_terminal(program, options, state) catch { _ => () })
+    task()
+  } catch {
+    err => raise NativeError(err.to_string())
   }
   resume_terminal(program, options, state)
   msg
