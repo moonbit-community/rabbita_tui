@@ -720,7 +720,7 @@ pub async fn[Model, Msg] Program::run_headless(
   events? : Array[Event] = [],
   options? : HeadlessOptions = HeadlessOptions::default(),
 ) -> ProgramRunResult[Model] {
-  let queue = @aqueue.Queue::new(kind=Unbounded)
+  let queue = @aqueue.Queue(kind=Unbounded)
   let terminal_commands : Array[TerminalCommand] = []
   let frames : Array[Frame] = []
   let emit = Emit::new(msg => ignore(queue.try_put(msg) catch { _ => false }))

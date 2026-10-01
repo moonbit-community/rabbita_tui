@@ -476,7 +476,7 @@ fn starts_with_ascii(bytes : Bytes, index : Int, value : String) -> Bool {
 
 ///|
 fn slice_ascii(bytes : Bytes, start : Int, end : Int) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for index in start..<end {
     let byte = bytes[index].to_int()
     if byte >= 32 && byte <= 126 {

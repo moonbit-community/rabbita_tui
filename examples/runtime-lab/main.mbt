@@ -592,7 +592,7 @@ fn mouse_button(button : MouseButton) -> String {
 
 ///|
 fn join(items : Array[String], sep : String) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for index, item in items {
     if index > 0 {
       out.write_string(sep)

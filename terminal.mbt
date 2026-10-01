@@ -217,7 +217,7 @@ async fn[Model, Msg] Program::run_with_runtime_control(
     current_size: terminal_size(),
     exit: ProgramQuit,
   }
-  let queue = @aqueue.Queue::new(kind=Unbounded)
+  let queue = @aqueue.Queue(kind=Unbounded)
   let emit = Emit::new(msg => {
     ignore(queue.try_put(RuntimeMsg(msg)) catch { _ => false })
   })
@@ -382,7 +382,7 @@ fn start_program_output(
   if options.alternate_screen {
     ansi_start_program(options, node, size)
   } else {
-    let out = StringBuilder::new()
+    let out = StringBuilder()
     out.write_string(ansi_disable_autowrap())
     if options.hide_cursor {
       out.write_string(ansi_hide_cursor())
@@ -404,7 +404,7 @@ fn start_program_output(
 ///|
 #coverage.skip
 fn start_program_control_output(options : ProgramOptions) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   if options.alternate_screen {
     out.write_string(ansi_enter_alternate_screen())
   }
@@ -447,7 +447,7 @@ fn frame_update_output(
 ///|
 #coverage.skip
 fn stop_program_output(options : ProgramOptions) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   out.write_string(ansi_stop_program(options))
   if !options.alternate_screen {
     out.write_string("\r\n")
@@ -458,7 +458,7 @@ fn stop_program_output(options : ProgramOptions) -> String {
 ///|
 #coverage.skip
 fn repaint_resized_frame(frame : StyledFrame) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   out.write_string(ansi_clear_screen())
   out.write_string(ansi_move_cursor(1, 1))
   out.write_string(paint_styled_frame_ansi(frame))
@@ -519,7 +519,7 @@ fn safe_print_output(
   match state.previous {
     None => if newline { "\{value}\r\n" } else { value }
     Some(frame) => {
-      let out = StringBuilder::new()
+      let out = StringBuilder()
       if options.alternate_screen {
         out.write_string(ansi_leave_alternate_screen())
         write_safe_print_text(out, value, newline)
@@ -752,13 +752,9 @@ fn[Model, Msg] run_suspended_process(
   args : Array[String],
 ) -> Int raise TerminalError {
   suspend_terminal(options, state)
-  let status = run_process(command, args) catch {
-    err => {
-      resume_terminal(program, options, state) catch {
-        _ => ()
-      }
-      raise err
-    }
+  let status = {
+    errdefer (resume_terminal(program, options, state) catch { _ => () })
+    run_process(command, args)
   }
   resume_terminal(program, options, state)
   status
@@ -770,7 +766,7 @@ fn suspend_terminal(
   options : ProgramOptions,
   state : RuntimeState,
 ) -> Unit raise TerminalError {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   match state.previous {
     Some(frame) if options.renderer_enabled =>
       if !options.alternate_screen && frame.lines.length() > 0 {
@@ -781,11 +777,9 @@ fn suspend_terminal(
     _ => ()
   }
   output.write_string(stop_program_output(options))
-  write_terminal(output.to_string()) catch {
-    err => {
-      restore_terminal()
-      raise err
-    }
+  {
+    errdefer restore_terminal()
+    write_terminal(output.to_string())
   }
   restore_terminal()
 }
@@ -851,7 +845,7 @@ fn run_process(
 ///|
 #coverage.skip
 fn pack_exec_args(args : Array[String]) -> Bytes {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for index, arg in args {
     if index > 0 {
       out.write_char('\u{00}')

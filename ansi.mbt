@@ -164,7 +164,7 @@ pub fn ansi_start_program(
   node : Node,
   size : Size,
 ) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   if options.alternate_screen {
     out.write_string(ansi_enter_alternate_screen())
   }
@@ -188,7 +188,7 @@ pub fn ansi_start_program(
 
 ///|
 pub fn ansi_stop_program(options : ProgramOptions) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   out.write_string(ansi_enable_autowrap())
   if options.focus_events {
     out.write_string(ansi_disable_focus_events())
@@ -269,7 +269,7 @@ pub fn diff_node_ansi(
 
 ///|
 pub fn paint_frame_ansi(frame : Frame) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for index, line in frame.lines {
     out.write_string(ansi_move_cursor(index + 1, 1))
     out.write_string(screen_line(line))
@@ -279,7 +279,7 @@ pub fn paint_frame_ansi(frame : Frame) -> String {
 
 ///|
 fn paint_styled_frame_ansi(frame : StyledFrame) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for index, line in frame.lines {
     out.write_string(ansi_move_cursor(index + 1, 1))
     out.write_string(screen_styled_line(line))
@@ -289,7 +289,7 @@ fn paint_styled_frame_ansi(frame : StyledFrame) -> String {
 
 ///|
 fn paint_styled_frame_inline(frame : StyledFrame) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for index, line in frame.lines {
     if index > 0 {
       out.write_string("\r\n")
@@ -304,7 +304,7 @@ fn repaint_styled_frame_inline(
   previous_height : Int,
   frame : StyledFrame,
 ) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   out.write_string(ansi_move_cursor_up(previous_height - 1))
   out.write_string("\r")
   let limit = Int::max(previous_height, frame.lines.length())
@@ -327,7 +327,7 @@ fn diff_styled_frame_inline(
   previous : StyledFrame,
   next : StyledFrame,
 ) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   if previous.lines.length() > 0 {
     out.write_string(ansi_move_cursor_up(previous.lines.length() - 1))
   }
@@ -356,7 +356,7 @@ fn diff_styled_frame_inline(
 
 ///|
 fn diff_styled_frame(previous : StyledFrame, next : StyledFrame) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   let limit = Int::max(previous.lines.length(), next.lines.length())
   for index in 0..<limit {
     let old_line = if index < previous.lines.length() {
@@ -379,7 +379,7 @@ fn diff_styled_frame(previous : StyledFrame, next : StyledFrame) -> String {
 
 ///|
 fn diff_lines(previous : Array[String], next : Array[String]) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   let limit = Int::max(previous.length(), next.length())
   for index in 0..<limit {
     let old_line = if index < previous.length() { previous[index] } else { "" }
@@ -575,8 +575,8 @@ fn render_styled_hstack(
   let spacer = repeat_to_width(" ", gap)
   let styled_spacer = styled_text(spacer, inherited)
   for row in 0..<height {
-    let plain = StringBuilder::new()
-    let ansi = StringBuilder::new()
+    let plain = StringBuilder()
+    let ansi = StringBuilder()
     for index, child_lines in rendered {
       if index > 0 {
         plain.write_string(spacer)
@@ -760,7 +760,7 @@ fn take_ansi_width(value : String, width : Int) -> String {
   if width <= 0 {
     return ""
   }
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   let mut used = 0
   let mut index = 0
   let mut saw_escape = false
@@ -927,7 +927,7 @@ fn join_lines(lines : Array[String]) -> String {
 
 ///|
 fn join_with(items : Array[String], sep : String) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for index, item in items {
     if index > 0 {
       out.write_string(sep)

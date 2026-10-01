@@ -791,7 +791,7 @@ fn char_count(value : String) -> Int {
 
 ///|
 fn take_chars(value : String, count : Int) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   let mut taken = 0
   for char in value {
     if taken >= count {
@@ -805,8 +805,8 @@ fn take_chars(value : String, count : Int) -> String {
 
 ///|
 fn split_at_chars(value : String, count : Int) -> (String, String) {
-  let left = StringBuilder::new()
-  let right = StringBuilder::new()
+  let left = StringBuilder()
+  let right = StringBuilder()
   let mut index = 0
   for char in value {
     if index < count {
@@ -849,7 +849,7 @@ fn take_right_width(value : String, width : Int) -> String {
     start -= 1
     used += next_width
   }
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for index in start..<chars.length() {
     out.write_string(chars[index])
   }
@@ -902,7 +902,7 @@ fn join_cells(cells : Array[String]) -> String {
 
 ///|
 fn join_with_sep(items : Array[String], sep : String) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for index, item in items {
     if index > 0 {
       out.write_string(sep)

@@ -694,7 +694,7 @@ fn demo_app() -> Cell[CodexModel, CodexMsg] {
 ///|
 fn top_bar(model : CodexModel, width : Int) -> Node {
   let labels = ["chat", "plan", "logs"]
-  let left = StringBuilder::new()
+  let left = StringBuilder()
   left.write_string("  codex  /repo  ")
   for index, label in labels {
     if index > 0 {
