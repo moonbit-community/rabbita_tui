@@ -314,7 +314,7 @@ fn render_hstack(
   let out : Array[String] = []
   let spacer = repeat_to_width(" ", gap)
   for row in 0..<height {
-    let line = StringBuilder::new()
+    let line = StringBuilder()
     for index, child_lines in rendered {
       if index > 0 {
         line.write_string(spacer)
@@ -558,7 +558,7 @@ pub fn repeat_to_width(value : String, width : Int) -> String {
   if width <= 0 || value == "" {
     return ""
   }
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   let mut used = 0
   while used < width {
     out.write_string(value)
@@ -581,7 +581,7 @@ pub fn take_width(value : String, width : Int) -> String {
   if width <= 0 {
     return ""
   }
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   let mut used = 0
   for char in value {
     let width_of_char = char_width(char)
