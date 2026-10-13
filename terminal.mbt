@@ -1,32 +1,32 @@
 ///|
 #cfg(not(platform="windows"))
-extern "C" fn tui_is_tty(fd : Int) -> Int = "moonbit_tui_is_tty"
+extern "C" fn tui_is_tty(fd : Int32) -> Int32 = "moonbit_tui_is_tty"
 
 ///|
 #cfg(not(platform="windows"))
-extern "C" fn tui_enable_raw(fd : Int) -> Int = "moonbit_tui_enable_raw"
+extern "C" fn tui_enable_raw(fd : Int32) -> Int32 = "moonbit_tui_enable_raw"
 
 ///|
 #cfg(not(platform="windows"))
-extern "C" fn tui_restore(fd : Int) -> Int = "moonbit_tui_restore"
+extern "C" fn tui_restore(fd : Int32) -> Int32 = "moonbit_tui_restore"
 
 ///|
 #cfg(not(platform="windows"))
-extern "C" fn tui_width(fd : Int) -> Int = "moonbit_tui_width"
+extern "C" fn tui_width(fd : Int32) -> Int32 = "moonbit_tui_width"
 
 ///|
 #cfg(not(platform="windows"))
-extern "C" fn tui_height(fd : Int) -> Int = "moonbit_tui_height"
+extern "C" fn tui_height(fd : Int32) -> Int32 = "moonbit_tui_height"
 
 ///|
 #cfg(not(platform="windows"))
 #borrow(bytes)
 extern "C" fn tui_write(
-  fd : Int,
+  fd : Int32,
   bytes : Bytes,
-  offset : Int,
-  len : Int,
-) -> Int = "moonbit_tui_write"
+  offset : Int32,
+  len : Int32,
+) -> Int32 = "moonbit_tui_write"
 
 ///|
 #cfg(not(platform="windows"))
@@ -37,25 +37,25 @@ extern "C" fn tui_install_resize_handler() -> Unit = "moonbit_tui_install_resize
 #borrow(command, args)
 extern "C" fn tui_exec_process(
   command : Bytes,
-  command_offset : Int,
-  command_len : Int,
+  command_offset : Int32,
+  command_len : Int32,
   args : Bytes,
-  args_offset : Int,
-  args_len : Int,
-  argc : Int,
-) -> Int = "moonbit_tui_exec_process"
+  args_offset : Int32,
+  args_len : Int32,
+  argc : Int32,
+) -> Int32 = "moonbit_tui_exec_process"
 
 ///|
 #coverage.skip
 #cfg(not(platform="windows"))
-pub fn is_tty(fd : Int) -> Bool {
+pub fn is_tty(fd : Int32) -> Bool {
   tui_is_tty(fd) == 1
 }
 
 ///|
 #coverage.skip
 #cfg(platform="windows")
-pub fn is_tty(fd : Int) -> Bool {
+pub fn is_tty(fd : Int32) -> Bool {
   ignore(fd)
   false
 }
@@ -160,7 +160,7 @@ pub async fn[Model, Msg] Program::run_with_cancel_token(
 pub async fn[Model, Msg] Program::run_with_timeout(
   self : Program[Model, Msg],
   options : ProgramOptions,
-  milliseconds : Int,
+  milliseconds : Int32,
 ) -> Model raise TerminalError {
   self.run_with_timeout_result(options, milliseconds).model
 }
@@ -189,7 +189,7 @@ pub async fn[Model, Msg] Program::run_with_cancel_token_result(
 pub async fn[Model, Msg] Program::run_with_timeout_result(
   self : Program[Model, Msg],
   options : ProgramOptions,
-  milliseconds : Int,
+  milliseconds : Int32,
 ) -> ProgramRuntimeResult[Model] raise TerminalError {
   self.run_with_runtime_control(options, None, milliseconds)
 }
@@ -208,7 +208,7 @@ async fn[Model, Msg] Program::run_with_runtime_control(
   self : Program[Model, Msg],
   options : ProgramOptions,
   cancel_token : CancelToken?,
-  timeout_millis : Int,
+  timeout_millis : Int32,
 ) -> ProgramRuntimeResult[Model] raise TerminalError {
   enter_raw_mode()
   defer restore_terminal()
@@ -270,7 +270,7 @@ async fn[Model, Msg] Program::run_with_runtime_control(
       )
     })
     if options.renderer_enabled && options.renderer_fps > 0 {
-      let interval = Int::max(1, 1000 / options.renderer_fps)
+      let interval = Int32::max(1, 1000 / options.renderer_fps)
       group.spawn_bg(no_wait=true, allow_failure=true, () => {
         while true {
           @async.sleep(interval)
@@ -471,7 +471,7 @@ fn safe_terminal_command_output(
   command : TerminalCommand,
   options : ProgramOptions,
   state : RuntimeState,
-  fd~ : Int,
+  fd~ : Int32,
 ) -> String {
   if fd == 2 && !is_tty(2) {
     return raw_terminal_command_output(command)
@@ -498,7 +498,7 @@ fn raw_terminal_command_output(command : TerminalCommand) -> String {
 
 ///|
 #coverage.skip
-fn terminal_command_fd(command : TerminalCommand) -> Int {
+fn terminal_command_fd(command : TerminalCommand) -> Int32 {
   match command {
     PrintErr(_) | PrintErrLine(_) => 2
     _ => 1
@@ -575,7 +575,7 @@ fn split_safe_print(value : String) -> Array[String] {
   let mut start = 0
   let mut index = 0
   while index < value.length() {
-    if value.code_unit_at(index) == Int::to_uint16('\n'.to_int()) {
+    if value.code_unit_at(index) == Int32::to_uint16('\n'.to_int()) {
       lines.push(trim_safe_print_cr(value[start:index].to_owned()))
       start = index + 1
     }
@@ -591,7 +591,7 @@ fn split_safe_print(value : String) -> Array[String] {
 #coverage.skip
 fn trim_safe_print_cr(value : String) -> String {
   if value.length() > 0 &&
-    value.code_unit_at(value.length() - 1) == Int::to_uint16('\r'.to_int()) {
+    value.code_unit_at(value.length() - 1) == Int32::to_uint16('\r'.to_int()) {
     value[:value.length() - 1].to_owned()
   } else {
     value
@@ -694,11 +694,11 @@ async fn[Model, Msg] run_runtime_cmd(
         run_runtime_cmd(program, child, queue, group, options, state)
       }
     CmdDelay(milliseconds, cmd) => {
-      @async.sleep(Int::max(1, milliseconds))
+      @async.sleep(Int32::max(1, milliseconds))
       run_runtime_cmd(program, cmd, queue, group, options, state)
     }
     CmdEvery(milliseconds, cmd) => {
-      let interval = Int::max(1, milliseconds)
+      let interval = Int32::max(1, milliseconds)
       while true {
         @async.sleep(interval)
         run_runtime_cmd(program, cmd, queue, group, options, state)
@@ -750,7 +750,7 @@ fn[Model, Msg] run_suspended_process(
   state : RuntimeState,
   command : String,
   args : Array[String],
-) -> Int raise TerminalError {
+) -> Int32 raise TerminalError {
   suspend_terminal(options, state)
   let status = {
     errdefer (resume_terminal(program, options, state) catch { _ => () })
@@ -812,7 +812,7 @@ fn[Model, Msg] resume_terminal(
 fn run_process(
   command : String,
   args : Array[String],
-) -> Int raise TerminalError {
+) -> Int32 raise TerminalError {
   let bytes = @encoding/utf8.encode(command)
   let packed_args = pack_exec_args(args)
   let status = tui_exec_process(
@@ -836,7 +836,7 @@ fn run_process(
 fn run_process(
   command : String,
   args : Array[String],
-) -> Int raise TerminalError {
+) -> Int32 raise TerminalError {
   ignore(command)
   ignore(args)
   raise UnsupportedPlatform
@@ -888,7 +888,7 @@ fn[Model, Msg] handle_terminal_command(
 async fn[Msg] watch_terminal_resize(
   queue : @aqueue.Queue[RuntimeItem[Msg]],
   initial_size : Size,
-  poll_millis : Int,
+  poll_millis : Int32,
 ) -> Unit {
   let mut last = initial_size
   while true {
@@ -992,7 +992,7 @@ fn write_terminal(output : String) -> Unit raise TerminalError {
 ///|
 #coverage.skip
 #cfg(not(platform="windows"))
-fn write_terminal_fd(fd : Int, output : String) -> Unit raise TerminalError {
+fn write_terminal_fd(fd : Int32, output : String) -> Unit raise TerminalError {
   let bytes = @encoding/utf8.encode(output)
   let mut offset = 0
   while offset < bytes.length() {
@@ -1016,7 +1016,7 @@ fn write_terminal(output : String) -> Unit raise TerminalError {
 ///|
 #coverage.skip
 #cfg(platform="windows")
-fn write_terminal_fd(fd : Int, output : String) -> Unit raise TerminalError {
+fn write_terminal_fd(fd : Int32, output : String) -> Unit raise TerminalError {
   ignore(fd)
   ignore(output)
   raise UnsupportedPlatform

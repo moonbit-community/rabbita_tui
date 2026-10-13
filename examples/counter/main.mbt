@@ -22,10 +22,10 @@ using @widgets {keymap, progress, status_line}
 
 ///|
 struct CounterModel {
-  count : Int
-  step : Int
-  width : Int
-  height : Int
+  count : Int32
+  step : Int32
+  width : Int32
+  height : Int32
   status : String
 } derive(Eq, Debug)
 
@@ -101,7 +101,7 @@ fn view(model : CounterModel) -> Node {
     status_line(
       left="counter",
       right="\{Int::max(32, model.width)}x\{Int::max(12, model.height)}",
-      width=Int::max(1, model.width - 1),
+      width=Int32::max(1, model.width - 1),
       style=Style::default().fg(Ansi(16)).bg(Ansi(153)).bold(),
     ),
     vstack(
@@ -111,15 +111,15 @@ fn view(model : CounterModel) -> Node {
         .padding(Edge::all(1))
         .border()
         .size(
-          width=Int::max(1, model.width - 1),
-          height=Int::max(11, Int::max(12, model.height) - 1),
+          width=Int32::max(1, model.width - 1),
+          height=Int32::max(11, Int32::max(12, model.height) - 1),
         ),
     ) <| [
       text(
         style=Style::default().fg(Ansi(25)).bold(),
         fit_line(
           "Counter",
-          clamp(24, 72, Int::max(32, model.width - 1) - 4) - 4,
+          clamp(24, 72, Int32::max(32, model.width - 1) - 4) - 4,
         ),
       ),
       text(style=Style::default().fg(Ansi(28)).bold(), model.count.to_string()),
@@ -127,7 +127,10 @@ fn view(model : CounterModel) -> Node {
       progress(
         current=clamp(0, 100, model.count + 50),
         total=100,
-        width=Int::max(12, clamp(24, 72, Int::max(32, model.width - 1) - 4) - 8),
+        width=Int32::max(
+          12,
+          clamp(24, 72, Int32::max(32, model.width - 1) - 4) - 8,
+        ),
         style=Style::default().fg(Ansi(28)),
       ),
       keymap(
@@ -138,7 +141,7 @@ fn view(model : CounterModel) -> Node {
           { keys: [Char("r")], help: "reset", },
           { keys: [Char("q")], help: "quit", },
         ],
-        width=clamp(24, 72, Int::max(32, model.width - 1) - 4) - 4,
+        width=clamp(24, 72, Int32::max(32, model.width - 1) - 4) - 4,
         style=Style::default().fg(Ansi(244)),
       ),
     ],
@@ -146,7 +149,7 @@ fn view(model : CounterModel) -> Node {
 }
 
 ///|
-fn clamp(lbound : Int, ubound : Int, value : Int) -> Int {
+fn clamp(lbound : Int32, ubound : Int32, value : Int32) -> Int32 {
   if value < lbound {
     lbound
   } else if value > ubound {

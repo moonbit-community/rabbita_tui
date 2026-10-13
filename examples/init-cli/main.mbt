@@ -63,13 +63,13 @@ struct InitModel {
   author : TextInput
   template : List
   package_manager : List
-  feature_cursor : Int
+  feature_cursor : Int32
   features : Vector[Bool]
   license : List
-  progress : Int
-  spinner : Int
-  width : Int
-  height : Int
+  progress : Int32
+  spinner : Int32
+  width : Int32
+  height : Int32
   status : String
 } derive(Eq, Debug)
 
@@ -194,7 +194,7 @@ fn paste_current(value : String, model : InitModel) -> InitModel {
 }
 
 ///|
-fn move_current(model : InitModel, delta : Int) -> InitModel {
+fn move_current(model : InitModel, delta : Int32) -> InitModel {
   match model.step {
     Template => {
       let msg : ListMsg = ListMove(delta, list_height(model))
@@ -208,9 +208,9 @@ fn move_current(model : InitModel, delta : Int) -> InitModel {
       let count = feature_names().length()
       {
         ..model,
-        feature_cursor: Int::max(
+        feature_cursor: Int32::max(
           0,
-          Int::min(count - 1, model.feature_cursor + delta),
+          Int32::min(count - 1, model.feature_cursor + delta),
         ),
       }
     }
@@ -276,8 +276,8 @@ fn start_generating_model(model : InitModel) -> InitModel {
 
 ///|
 fn view(model : InitModel) -> Node {
-  let width = Int::max(1, model.width - 1)
-  let body_height = Int::max(1, model.height - 3)
+  let width = Int32::max(1, model.width - 1)
+  let body_height = Int32::max(1, model.height - 3)
   vstack <| [
     top_bar(model, width),
     step_bar(model, width),
@@ -291,7 +291,7 @@ fn view(model : InitModel) -> Node {
 }
 
 ///|
-fn top_bar(model : InitModel, width : Int) -> Node {
+fn top_bar(model : InitModel, width : Int32) -> Node {
   text(
     style=Style::default().fg(Ansi(16)).bg(Ansi(250)).bold(),
     line_text(
@@ -306,7 +306,7 @@ fn top_bar(model : InitModel, width : Int) -> Node {
 }
 
 ///|
-fn step_bar(model : InitModel, width : Int) -> Node {
+fn step_bar(model : InitModel, width : Int32) -> Node {
   let step_number = step_index(model.step) + 1
   let left = "  \{step_number}/\{visible_step_count()}  \{step_title(model.step)}"
   let right = if model.step == Generating {
@@ -341,7 +341,7 @@ fn body_view(model : InitModel, size : Size) -> Node {
     ]
   } else if size.height >= 14 {
     let preview_height = clamp(6, 9, size.height / 3 + 2)
-    let question_height = Int::max(1, size.height - preview_height - 1)
+    let question_height = Int32::max(1, size.height - preview_height - 1)
     vstack(gap=1) <| [
       question_view(model, { width: size.width, height: question_height, }),
       preview_view(model, { width: size.width, height: preview_height, }),
@@ -371,10 +371,10 @@ fn name_view(model : InitModel, size : Size) -> Node {
   panel(title="Project name", size~) <| [
     text(style=muted_style(), "Choose a directory and package name."),
     model.project_name.view(
-      width=Int::max(1, size.width - 4),
+      width=Int32::max(1, size.width - 4),
       style=accent_style()
         .border()
-        .size(width=Int::max(1, size.width - 2), height=3),
+        .size(width=Int32::max(1, size.width - 2), height=3),
     ),
     text(
       "Example: moonbit-awesome, agent-tools, docs-site",
@@ -403,10 +403,10 @@ fn author_view(model : InitModel, size : Size) -> Node {
   panel(title="Author", size~) <| [
     text(style=muted_style(), "Used in README metadata and package manifest."),
     model.author.view(
-      width=Int::max(1, size.width - 4),
+      width=Int32::max(1, size.width - 4),
       style=accent_style()
         .border()
-        .size(width=Int::max(1, size.width - 2), height=3),
+        .size(width=Int32::max(1, size.width - 2), height=3),
     ),
     text(style=muted_style(), "Leave empty to skip author metadata."),
   ]
@@ -421,8 +421,8 @@ fn license_view(model : InitModel, size : Size) -> Node {
 fn confirm_view(model : InitModel, size : Size) -> Node {
   panel(title="Review", size~) <| [
     text(style=muted_style(), "The initializer will create:"),
-    summary_table(model, Int::max(1, size.width - 4)),
-    command_box("moon run examples/init-cli", Int::max(1, size.width - 4)),
+    summary_table(model, Int32::max(1, size.width - 4)),
+    command_box("moon run examples/init-cli", Int32::max(1, size.width - 4)),
   ]
 }
 
@@ -449,7 +449,7 @@ fn generating_view(model : InitModel, size : Size) -> Node {
     progress(
       current=model.progress,
       total=generation_tasks().length(),
-      width=Int::max(1, size.width - 4),
+      width=Int32::max(1, size.width - 4),
     ),
     vstack <| task_rows,
   ]
@@ -462,10 +462,10 @@ fn done_view(model : InitModel, size : Size) -> Node {
       style=success_style().bold(),
       "Created \{project_name(model)} from \{selected_template(model).name}.",
     ),
-    file_tree(model, Int::max(1, size.width - 4)),
+    file_tree(model, Int32::max(1, size.width - 4)),
     command_box(
       "cd \{project_name(model)} && moon test",
-      Int::max(1, size.width - 4),
+      Int32::max(1, size.width - 4),
     ),
   ]
 }
@@ -488,11 +488,11 @@ fn panel(title~ : String, size~ : Size, nodes : Array[Node]) -> Node {
     gap=1,
     style=panel_border_style()
       .border(kind=Rounded)
-      .size(width=Int::max(1, size.width), height=Int::max(1, size.height)),
+      .size(width=Int32::max(1, size.width), height=Int32::max(1, size.height)),
   ) <| [
     text(
       style=Style::default().bold(),
-      fit_line(title, Int::max(1, size.width - 2)),
+      fit_line(title, Int32::max(1, size.width - 2)),
     ),
     ..nodes,
   ]
@@ -549,21 +549,21 @@ fn selectable_line(
   selected : Bool,
   label : String,
   description : String,
-  width : Int,
+  width : Int32,
 ) -> Node {
   let marker = if selected { "> " } else { "  " }
   text(
     style=if selected { accent_style().bold() } else { Style::default() },
-    fit_line("\{marker}\{label}  \{description}", Int::max(1, width - 4)),
+    fit_line("\{marker}\{label}  \{description}", Int32::max(1, width - 4)),
   )
 }
 
 ///|
-fn summary_table(model : InitModel, width : Int) -> Node {
+fn summary_table(model : InitModel, width : Int32) -> Node {
   table(
     columns=[
       { title: "Field", width: 12, },
-      { title: "Value", width: Int::max(16, width - 18), },
+      { title: "Value", width: Int32::max(16, width - 18), },
     ],
     rows=[
       ["Name", project_name(model)],
@@ -578,7 +578,7 @@ fn summary_table(model : InitModel, width : Int) -> Node {
 }
 
 ///|
-fn command_box(command : String, width : Int) -> Node {
+fn command_box(command : String, width : Int32) -> Node {
   text(
     style=Style::default().fg(Ansi(16)).bg(Ansi(254)),
     fit_line("$ \{command}", width),
@@ -586,7 +586,7 @@ fn command_box(command : String, width : Int) -> Node {
 }
 
 ///|
-fn file_tree(model : InitModel, width : Int) -> Node {
+fn file_tree(model : InitModel, width : Int32) -> Node {
   let lines = [
     "\{project_name(model)}/",
     "  moon.mod.json",
@@ -599,7 +599,7 @@ fn file_tree(model : InitModel, width : Int) -> Node {
 }
 
 ///|
-fn help_view(model : InitModel, width : Int) -> Node {
+fn help_view(model : InitModel, width : Int32) -> Node {
   let help = if model.step == Features {
     keymap(
       bindings=[
@@ -686,17 +686,17 @@ fn selected_features_label(model : InitModel) -> String {
 }
 
 ///|
-fn list_height(model : InitModel) -> Int {
-  Int::max(3, model.height - 9)
+fn list_height(model : InitModel) -> Int32 {
+  Int32::max(3, model.height - 9)
 }
 
 ///|
-fn visible_step_count() -> Int {
+fn visible_step_count() -> Int32 {
   7
 }
 
 ///|
-fn step_index(step : InitStep) -> Int {
+fn step_index(step : InitStep) -> Int32 {
   match step {
     Name => 0
     Template => 1
@@ -767,7 +767,7 @@ fn step_status(step : InitStep) -> String {
 }
 
 ///|
-fn generation_label(progress : Int) -> String {
+fn generation_label(progress : Int32) -> String {
   let tasks = generation_tasks()
   if progress >= tasks.length() {
     "complete"
@@ -818,7 +818,7 @@ fn package_names() -> Array[String] {
 }
 
 ///|
-fn package_description(index : Int) -> String {
+fn package_description(index : Int32) -> String {
   match index {
     0 => "minimal MoonBit workflow"
     1 => "CI based on stable_check.yml"
@@ -833,7 +833,7 @@ fn feature_names() -> Array[String] {
 }
 
 ///|
-fn feature_description(index : Int) -> String {
+fn feature_description(index : Int32) -> String {
   match index {
     0 => "initialize repository"
     1 => "add snapshot and behavior tests"
@@ -850,7 +850,7 @@ fn license_names() -> Array[String] {
 }
 
 ///|
-fn license_description(index : Int) -> String {
+fn license_description(index : Int32) -> String {
   match index {
     0 => "permissive, patent grant"
     1 => "short permissive license"
@@ -869,12 +869,12 @@ fn generation_tasks() -> Array[String] {
 }
 
 ///|
-fn spinner_text(frame : Int) -> String {
+fn spinner_text(frame : Int32) -> String {
   ["-", "\\", "|", "/"][frame % 4]
 }
 
 ///|
-fn line_text(node : Node, width : Int) -> String {
+fn line_text(node : Node, width : Int32) -> String {
   let lines = render_plain(node, { width, height: 1, })
   if lines.is_empty() {
     repeat_to_width(" ", width)
@@ -896,7 +896,7 @@ fn join(items : Array[String], sep : String) -> String {
 }
 
 ///|
-fn clamp(lbound : Int, ubound : Int, value : Int) -> Int {
+fn clamp(lbound : Int32, ubound : Int32, value : Int32) -> Int32 {
   if value < lbound {
     lbound
   } else if value > ubound {
