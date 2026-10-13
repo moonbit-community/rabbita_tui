@@ -16,7 +16,7 @@ using @tui {
 ///|
 pub(all) struct TextInput {
   value : String
-  cursor : Int
+  cursor : Int32
   placeholder : String
 } derive(Eq, Debug)
 
@@ -29,8 +29,8 @@ pub(all) enum TextInputMsg {
 
 ///|
 pub fn TextInput::TextInput(
-  placeholder? : String = "",
-  value? : String = "",
+  placeholder~ : String = "",
+  value~ : String = "",
 ) -> TextInput {
   { value, cursor: char_count(value), placeholder, }
 }
@@ -73,12 +73,12 @@ fn delete_text_input(input : TextInput) -> TextInput {
 
 ///|
 fn move_text_input_left(input : TextInput) -> TextInput {
-  { ..input, cursor: Int::max(0, input.cursor - 1), }
+  { ..input, cursor: Int32::max(0, input.cursor - 1), }
 }
 
 ///|
 fn move_text_input_right(input : TextInput) -> TextInput {
-  { ..input, cursor: Int::min(char_count(input.value), input.cursor + 1), }
+  { ..input, cursor: Int32::min(char_count(input.value), input.cursor + 1), }
 }
 
 ///|
@@ -107,8 +107,8 @@ pub fn TextInput::update(self : TextInput, msg : TextInputMsg) -> TextInput {
 ///|
 pub fn TextInput::view(
   self : TextInput,
-  width~ : Int,
-  style? : Style = Style::default(),
+  width~ : Int32,
+  style~ : Style = Style::default(),
 ) -> Node {
   let shown = if self.value == "" { self.placeholder } else { self.value }
   let cursor = if self.value == "" {
@@ -122,8 +122,8 @@ pub fn TextInput::view(
 ///|
 pub(all) struct Textarea {
   lines : Array[String]
-  row : Int
-  column : Int
+  row : Int32
+  column : Int32
   placeholder : String
 } derive(Eq, Debug)
 
@@ -136,8 +136,8 @@ pub(all) enum TextareaMsg {
 
 ///|
 pub fn Textarea::Textarea(
-  placeholder? : String = "",
-  value? : String = "",
+  placeholder~ : String = "",
+  value~ : String = "",
 ) -> Textarea {
   set_textarea({ lines: [""], row: 0, column: 0, placeholder, }, value)
 }
@@ -145,7 +145,7 @@ pub fn Textarea::Textarea(
 ///|
 fn set_textarea(area : Textarea, value : String) -> Textarea {
   let lines = split_widget_lines(value)
-  let last = Int::max(0, lines.length() - 1)
+  let last = Int32::max(0, lines.length() - 1)
   { ..area, lines, row: last, column: char_count(lines[last]), }
 }
 
@@ -258,14 +258,14 @@ fn delete_textarea(area : Textarea) -> Textarea {
 
 ///|
 fn move_textarea_up(area : Textarea) -> Textarea {
-  let row = Int::max(0, area.row - 1)
-  { ..area, row, column: Int::min(area.column, char_count(area.lines[row])), }
+  let row = Int32::max(0, area.row - 1)
+  { ..area, row, column: Int32::min(area.column, char_count(area.lines[row])), }
 }
 
 ///|
 fn move_textarea_down(area : Textarea) -> Textarea {
-  let row = Int::min(area.lines.length() - 1, area.row + 1)
-  { ..area, row, column: Int::min(area.column, char_count(area.lines[row])), }
+  let row = Int32::min(area.lines.length() - 1, area.row + 1)
+  { ..area, row, column: Int32::min(area.column, char_count(area.lines[row])), }
 }
 
 ///|
@@ -316,19 +316,19 @@ pub fn Textarea::update(self : Textarea, msg : TextareaMsg) -> Textarea {
 pub fn Textarea::view(
   self : Textarea,
   size~ : Size,
-  style? : Style = Style::default(),
+  style~ : Style = Style::default(),
 ) -> Node {
   if textarea_value(self) == "" && self.placeholder != "" {
     return vstack(style~) <| [
       text(
         fit_line(line_with_cursor(self.placeholder, 0, size.width), size.width),
       ),
-      ..blank_nodes(Int::max(0, size.height - 1), size.width),
+      ..blank_nodes(Int32::max(0, size.height - 1), size.width),
     ]
   }
   let row = clamp(0, self.lines.length() - 1, self.row)
   let start = if row >= size.height { row - size.height + 1 } else { 0 }
-  let end = Int::min(self.lines.length(), start + size.height)
+  let end = Int32::min(self.lines.length(), start + size.height)
   let visible = Array::makei(end - start, relative_index => {
     let index = start + relative_index
     let line = self.lines[index]
@@ -341,35 +341,39 @@ pub fn Textarea::view(
   })
   vstack(style~) <| [
     ..visible,
-    ..blank_nodes(Int::max(0, size.height - visible.length()), size.width),
+    ..blank_nodes(Int32::max(0, size.height - visible.length()), size.width),
   ]
 }
 
 ///|
 pub(all) struct List {
   items : Array[String]
-  selected : Int
-  offset : Int
+  selected : Int32
+  offset : Int32
 } derive(Eq, Debug)
 
 ///|
 pub(all) enum ListMsg {
-  ListMove(Int, Int)
-  ListPage(Int, Int)
-  ListSelect(Int)
+  ListMove(Int32, Int32)
+  ListPage(Int32, Int32)
+  ListSelect(Int32)
 } derive(Eq, Debug)
 
 ///|
 pub fn List::List(
   items~ : Array[String],
-  selected? : Int = 0,
-  offset? : Int = 0,
+  selected~ : Int32 = 0,
+  offset~ : Int32 = 0,
 ) -> List {
   { items, selected, offset, }
 }
 
 ///|
-fn move_list_selection(state : List, delta : Int, height? : Int = 0) -> List {
+fn move_list_selection(
+  state : List,
+  delta : Int32,
+  height~ : Int32 = 0,
+) -> List {
   if state.items.is_empty() {
     { ..state, selected: 0, offset: 0, }
   } else {
@@ -384,7 +388,7 @@ fn move_list_selection(state : List, delta : Int, height? : Int = 0) -> List {
 }
 
 ///|
-fn page_list(state : List, delta : Int, height : Int) -> List {
+fn page_list(state : List, delta : Int32, height : Int32) -> List {
   move_list_selection(state, delta * height, height~)
 }
 
@@ -420,11 +424,11 @@ pub fn List::update(self : List, msg : ListMsg) -> List {
 pub fn List::view(
   self : List,
   size~ : Size,
-  style? : Style = Style::default(),
+  style~ : Style = Style::default(),
 ) -> Node {
   let offset = viewport_offset(self.selected, self.offset, size.height)
   let start = clamp(0, self.items.length(), offset)
-  let end = Int::min(self.items.length(), start + size.height)
+  let end = Int32::min(self.items.length(), start + size.height)
   vstack(style~) <| Array::makei(end - start, offset => {
     let index = start + offset
     let marker = if index == self.selected { "> " } else { "  " }
@@ -435,17 +439,17 @@ pub fn List::view(
 ///|
 pub(all) struct TableColumn {
   title : String
-  width : Int
+  width : Int32
 } derive(Eq, Debug)
 
 ///|
 pub fn table(
   columns~ : Array[TableColumn],
   rows~ : Array[Array[String]],
-  selected? : Int = 0,
-  offset? : Int = 0,
+  selected~ : Int32 = 0,
+  offset~ : Int32 = 0,
   size~ : Size,
-  style? : Style = Style::default(),
+  style~ : Style = Style::default(),
 ) -> Node {
   let selected = if rows.is_empty() {
     0
@@ -453,9 +457,9 @@ pub fn table(
     clamp(0, rows.length() - 1, selected)
   }
   let header_cells = columns.map(column => fit_line(column.title, column.width))
-  let body_height = Int::max(0, size.height - 2)
+  let body_height = Int32::max(0, size.height - 2)
   let offset = viewport_offset(selected, offset, body_height)
-  let end = Int::min(rows.length(), offset + body_height)
+  let end = Int32::min(rows.length(), offset + body_height)
   let body = Array::makei(end - offset, relative_index => {
     let row_index = offset + relative_index
     let row = rows[row_index]
@@ -481,26 +485,30 @@ pub fn table(
 ///|
 pub(all) struct Viewport {
   lines : Array[String]
-  offset : Int
+  offset : Int32
 } derive(Eq, Debug)
 
 ///|
 pub(all) enum ViewportMsg {
-  ViewportScroll(Int, Int)
-  ViewportJump(Int, Int)
+  ViewportScroll(Int32, Int32)
+  ViewportJump(Int32, Int32)
 } derive(Eq, Debug)
 
 ///|
 pub fn Viewport::Viewport(
   lines~ : Array[String],
-  offset? : Int = 0,
+  offset~ : Int32 = 0,
 ) -> Viewport {
   { lines, offset, }
 }
 
 ///|
-fn scroll_viewport(viewport : Viewport, delta : Int, height : Int) -> Viewport {
-  let max_offset = Int::max(0, viewport.lines.length() - height)
+fn scroll_viewport(
+  viewport : Viewport,
+  delta : Int32,
+  height : Int32,
+) -> Viewport {
+  let max_offset = Int32::max(0, viewport.lines.length() - height)
   { ..viewport, offset: clamp(0, max_offset, viewport.offset + delta), }
 }
 
@@ -517,9 +525,9 @@ pub fn Viewport::update(self : Viewport, msg : ViewportMsg) -> Viewport {
 pub fn Viewport::view(
   self : Viewport,
   size~ : Size,
-  style? : Style = Style::default(),
+  style~ : Style = Style::default(),
 ) -> Node {
-  let end = Int::min(self.lines.length(), self.offset + size.height)
+  let end = Int32::min(self.lines.length(), self.offset + size.height)
   vstack(style~) <| Array::makei(end - self.offset, relative_index => {
     let index = self.offset + relative_index
     text(fit_line(self.lines[index], size.width))
@@ -528,43 +536,43 @@ pub fn Viewport::view(
 
 ///|
 pub fn paginator(
-  page~ : Int,
-  per_page~ : Int,
-  total_items~ : Int,
-  width~ : Int,
-  style? : Style = Style::default(),
+  page~ : Int32,
+  per_page~ : Int32,
+  total_items~ : Int32,
+  width~ : Int32,
+  style~ : Style = Style::default(),
 ) -> Node {
   let pages = paginator_pages(total_items~, per_page~)
   text(style~, fit_line("Page \{clamp_page(page, pages) + 1}/\{pages}", width))
 }
 
 ///|
-fn paginator_pages(total_items~ : Int, per_page~ : Int) -> Int {
-  let total_items = Int::max(0, total_items)
-  let per_page = Int::max(1, per_page)
-  Int::max(1, (total_items + per_page - 1) / per_page)
+fn paginator_pages(total_items~ : Int32, per_page~ : Int32) -> Int32 {
+  let total_items = Int32::max(0, total_items)
+  let per_page = Int32::max(1, per_page)
+  Int32::max(1, (total_items + per_page - 1) / per_page)
 }
 
 ///|
-fn clamp_page(page : Int, pages : Int) -> Int {
-  clamp(0, Int::max(1, pages) - 1, page)
+fn clamp_page(page : Int32, pages : Int32) -> Int32 {
+  clamp(0, Int32::max(1, pages) - 1, page)
 }
 
 ///|
 pub fn progress(
-  current~ : Int,
-  total~ : Int,
-  width~ : Int,
-  style? : Style = Style::default(),
+  current~ : Int32,
+  total~ : Int32,
+  width~ : Int32,
+  style~ : Style = Style::default(),
 ) -> Node {
   let ratio = Double::min(
     1.0,
     Double::max(
       0.0,
-      Int::max(0, current).to_double() / Int::max(1, total).to_double(),
+      Int32::max(0, current).to_double() / Int32::max(1, total).to_double(),
     ),
   )
-  let bar_width = Int::max(1, width - 6)
+  let bar_width = Int32::max(1, width - 6)
   let filled = (ratio * bar_width.to_double()).to_int()
   let percent = (ratio * 100.0).to_int()
   let filled_bar = repeat_to_width("█", filled)
@@ -574,11 +582,11 @@ pub fn progress(
 
 ///|
 pub fn timer(
-  remaining_ms~ : Int,
-  width~ : Int,
-  style? : Style = Style::default(),
+  remaining_ms~ : Int32,
+  width~ : Int32,
+  style~ : Style = Style::default(),
 ) -> Node {
-  let seconds = (Int::max(0, remaining_ms) + 999) / 1000
+  let seconds = (Int32::max(0, remaining_ms) + 999) / 1000
   text(style~, fit_line("\{seconds}s", width))
 }
 
@@ -596,8 +604,8 @@ fn key_binding_label(binding : KeyBinding) -> String {
 ///|
 pub fn keymap(
   bindings~ : Array[KeyBinding],
-  width~ : Int,
-  style? : Style = Style::default(),
+  width~ : Int32,
+  style~ : Style = Style::default(),
 ) -> Node {
   let parts = bindings.map(key_binding_label)
   text(style~, fit_line(join_with_sep(parts, "  "), width))
@@ -606,9 +614,9 @@ pub fn keymap(
 ///|
 pub fn tabs(
   labels~ : Array[String],
-  active? : Int = 0,
-  width~ : Int,
-  style? : Style = Style::default(),
+  active~ : Int32 = 0,
+  width~ : Int32,
+  style~ : Style = Style::default(),
 ) -> Node {
   let active = if labels.is_empty() {
     0
@@ -629,20 +637,20 @@ pub fn tabs(
 pub(all) struct CommandPalette {
   input : TextInput
   items : Array[String]
-  selected : Int
+  selected : Int32
 } derive(Eq, Debug)
 
 ///|
 pub(all) enum CommandPaletteMsg {
   CommandPaletteKey(Key)
-  CommandPaletteSelect(Int)
+  CommandPaletteSelect(Int32)
   CommandPaletteSetInput(String)
 } derive(Eq, Debug)
 
 ///|
 pub fn CommandPalette::CommandPalette(
   items~ : Array[String],
-  selected? : Int = 0,
+  selected~ : Int32 = 0,
 ) -> CommandPalette {
   { input: TextInput(), items, selected, }
 }
@@ -653,12 +661,12 @@ fn update_command_palette(
   key : Key,
 ) -> CommandPalette {
   match key {
-    Up => { ..palette, selected: Int::max(0, palette.selected - 1), }
+    Up => { ..palette, selected: Int32::max(0, palette.selected - 1), }
     Down => {
       let count = command_palette_items(palette).length()
       {
         ..palette,
-        selected: clamp(0, Int::max(0, count - 1), palette.selected + 1),
+        selected: clamp(0, Int32::max(0, count - 1), palette.selected + 1),
       }
     }
     _ =>
@@ -708,7 +716,7 @@ pub fn CommandPalette::update(
     CommandPaletteKey(key) => update_command_palette(self, key)
     CommandPaletteSelect(index) => {
       let count = command_palette_items(self).length()
-      { ..self, selected: clamp(0, Int::max(0, count - 1), index), }
+      { ..self, selected: clamp(0, Int32::max(0, count - 1), index), }
     }
     CommandPaletteSetInput(value) =>
       { ..self, input: self.input.update(TextInputSet(value)), selected: 0, }
@@ -719,7 +727,7 @@ pub fn CommandPalette::update(
 pub fn CommandPalette::view(
   self : CommandPalette,
   size~ : Size,
-  style? : Style = Style::default(),
+  style~ : Style = Style::default(),
 ) -> Node {
   let items = command_palette_items(self)
   let end = clamp(0, items.length(), size.height - 1)
@@ -737,7 +745,7 @@ pub fn CommandPalette::view(
 pub fn modal(
   title~ : String,
   size~ : Size,
-  style? : Style = Style::default(),
+  style~ : Style = Style::default(),
   children : Array[Node],
 ) -> Node {
   vstack(style=style.border(kind=Rounded)) <| [
@@ -750,8 +758,8 @@ pub fn modal(
 pub fn status_line(
   left~ : String,
   right~ : String,
-  width~ : Int,
-  style? : Style = Style::default(),
+  width~ : Int32,
+  style~ : Style = Style::default(),
 ) -> Node {
   let left_width = display_width(left)
   let right_width = display_width(right)
@@ -764,13 +772,13 @@ pub fn status_line(
 }
 
 ///|
-pub fn spinner(style? : Style = Style::default(), frame : Int) -> Node {
+pub fn spinner(style~ : Style = Style::default(), frame : Int32) -> Node {
   let frames = ["-", "\\", "|", "/"]
   text(style~, frames[frame % frames.length()])
 }
 
 ///|
-fn clamp(lbound : Int, ubound : Int, value : Int) -> Int {
+fn clamp(lbound : Int32, ubound : Int32, value : Int32) -> Int32 {
   if value < lbound {
     lbound
   } else if value > ubound {
@@ -781,7 +789,7 @@ fn clamp(lbound : Int, ubound : Int, value : Int) -> Int {
 }
 
 ///|
-fn char_count(value : String) -> Int {
+fn char_count(value : String) -> Int32 {
   let mut count = 0
   for _char in value {
     count += 1
@@ -790,7 +798,7 @@ fn char_count(value : String) -> Int {
 }
 
 ///|
-fn take_chars(value : String, count : Int) -> String {
+fn take_chars(value : String, count : Int32) -> String {
   let out = StringBuilder()
   let mut taken = 0
   for char in value {
@@ -804,7 +812,7 @@ fn take_chars(value : String, count : Int) -> String {
 }
 
 ///|
-fn split_at_chars(value : String, count : Int) -> (String, String) {
+fn split_at_chars(value : String, count : Int32) -> (String, String) {
   let left = StringBuilder()
   let right = StringBuilder()
   let mut index = 0
@@ -820,17 +828,17 @@ fn split_at_chars(value : String, count : Int) -> (String, String) {
 }
 
 ///|
-fn line_with_cursor(value : String, cursor : Int, width : Int) -> String {
+fn line_with_cursor(value : String, cursor : Int32, width : Int32) -> String {
   let cursor = clamp(0, char_count(value), cursor)
   let (before, after) = split_at_chars(value, cursor)
-  let text_width = Int::max(0, width - 1)
+  let text_width = Int32::max(0, width - 1)
   let left = take_right_width(before, text_width)
-  let right = take_width(after, Int::max(0, text_width - display_width(left)))
+  let right = take_width(after, Int32::max(0, text_width - display_width(left)))
   "\{left}█\{right}"
 }
 
 ///|
-fn take_right_width(value : String, width : Int) -> String {
+fn take_right_width(value : String, width : Int32) -> String {
   if width <= 0 {
     return ""
   }
@@ -857,12 +865,12 @@ fn take_right_width(value : String, width : Int) -> String {
 }
 
 ///|
-fn blank_nodes(count : Int, width : Int) -> Array[Node] {
+fn blank_nodes(count : Int32, width : Int32) -> Array[Node] {
   Array::makei(count, _ => text(repeat_to_width(" ", width)))
 }
 
 ///|
-fn viewport_offset(selected : Int, offset : Int, height : Int) -> Int {
+fn viewport_offset(selected : Int32, offset : Int32, height : Int32) -> Int32 {
   if height <= 0 {
     0
   } else if selected < offset {

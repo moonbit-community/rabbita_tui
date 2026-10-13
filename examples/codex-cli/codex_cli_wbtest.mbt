@@ -304,7 +304,7 @@ test "prompt history recalls entries and restores the draft" {
 }
 
 ///|
-async fn resized_scripted_model(width : Int, height : Int) -> CodexModel {
+async fn resized_scripted_model(width : Int32, height : Int32) -> CodexModel {
   let log : Array[CodexMsg] = []
   let emit = test_emit(log)
   let app = demo_app()
@@ -317,7 +317,7 @@ async fn resized_scripted_model(width : Int, height : Int) -> CodexModel {
 }
 
 ///|
-fn model_with_many_entries(width : Int, height : Int) -> CodexModel {
+fn model_with_many_entries(width : Int32, height : Int32) -> CodexModel {
   let mut transcript = Vector::new()
   for index in 0..<16 {
     transcript = transcript.push({

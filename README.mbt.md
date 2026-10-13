@@ -100,9 +100,9 @@ enum Msg {
 
 ///|
 struct Model {
-  count : Int
-  width : Int
-  height : Int
+  count : Int32
+  width : Int32
+  height : Int32
 } derive(Eq, Debug)
 
 ///|
@@ -187,9 +187,9 @@ using @widgets {type TextInput}
 struct Model {
   input : TextInput
   items : Vector[String]
-  selected : Int
-  width : Int
-  height : Int
+  selected : Int32
+  width : Int32
+  height : Int32
 }
 ```
 

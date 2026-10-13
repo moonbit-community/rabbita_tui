@@ -31,13 +31,13 @@ using @vector {type Vector}
 
 ///|
 struct LabModel {
-  width : Int
-  height : Int
-  spinner : Int
-  selected : Int
-  next_job : Int
-  running_job : Int
-  timeout_left : Int
+  width : Int32
+  height : Int32
+  spinner : Int32
+  selected : Int32
+  next_job : Int32
+  running_job : Int32
+  timeout_left : Int32
   status : String
   last_key : String
   events : Vector[String]
@@ -51,10 +51,10 @@ enum LabMsg {
   FocusChanged(Bool)
   MouseSeen(Mouse)
   Tick
-  JobFinished(Int)
-  TimeoutFinished(Int)
+  JobFinished(Int32)
+  TimeoutFinished(Int32)
   SuspendedDone
-  ExecDone(Int)
+  ExecDone(Int32)
 } derive(Eq, Debug)
 
 ///|
@@ -158,7 +158,7 @@ fn update_key(
 ///|
 fn update_scenario(
   emit : Emit[LabMsg],
-  index : Int,
+  index : Int32,
   model : LabModel,
 ) -> (Cmd, LabModel) {
   match index {
@@ -291,7 +291,7 @@ fn update_mouse(mouse : Mouse, model : LabModel) -> (Cmd, LabModel) {
 }
 
 ///|
-fn update_job_finished(id : Int, model : LabModel) -> (Cmd, LabModel) {
+fn update_job_finished(id : Int32, model : LabModel) -> (Cmd, LabModel) {
   if model.running_job == id {
     (
       Cmd::log("async job \{id} completed safely"),
@@ -306,7 +306,7 @@ fn update_job_finished(id : Int, model : LabModel) -> (Cmd, LabModel) {
 }
 
 ///|
-fn update_timeout_finished(id : Int, model : LabModel) -> (Cmd, LabModel) {
+fn update_timeout_finished(id : Int32, model : LabModel) -> (Cmd, LabModel) {
   if model.running_job == id {
     (
       Cmd::none(),
@@ -322,16 +322,16 @@ fn update_timeout_finished(id : Int, model : LabModel) -> (Cmd, LabModel) {
 
 ///|
 fn view(model : LabModel) -> Node {
-  let width = Int::max(1, model.width - 1)
-  let height = Int::max(6, model.height)
-  let body_height = Int::max(1, height - 3)
+  let width = Int32::max(1, model.width - 1)
+  let height = Int32::max(6, model.height)
+  let body_height = Int32::max(1, height - 3)
   let body = if width >= 56 && body_height >= 8 {
     hstack(gap=1, style=Style::default().size(width~, height=body_height)) <| [
-      controls_panel(model, Int::max(1, width / 2), body_height),
-      state_panel(model, Int::max(1, width - width / 2 - 1), body_height),
+      controls_panel(model, Int32::max(1, width / 2), body_height),
+      state_panel(model, Int32::max(1, width - width / 2 - 1), body_height),
     ]
   } else if body_height >= 10 {
-    let panel_height = Int::max(1, (body_height - 1) / 2)
+    let panel_height = Int32::max(1, (body_height - 1) / 2)
     vstack(gap=1, style=Style::default().size(width~, height=body_height)) <| [
       controls_panel(model, width, panel_height),
       state_panel(model, width, body_height - panel_height - 1),
@@ -351,7 +351,7 @@ fn view(model : LabModel) -> Node {
 }
 
 ///|
-fn header(model : LabModel, width : Int) -> Node {
+fn header(model : LabModel, width : Int32) -> Node {
   let spinner = first_line(
     render_plain(spinner(model.spinner), { width: 1, height: 1, }),
   )
@@ -365,7 +365,7 @@ fn header(model : LabModel, width : Int) -> Node {
 }
 
 ///|
-fn controls_panel(model : LabModel, width : Int, height : Int) -> Node {
+fn controls_panel(model : LabModel, width : Int32, height : Int32) -> Node {
   let scenario_lines = Array::makei(scenario_count(), index => {
     let marker = if model.selected == index { ">" } else { " " }
     if model.selected == index {
@@ -382,7 +382,7 @@ fn controls_panel(model : LabModel, width : Int, height : Int) -> Node {
 }
 
 ///|
-fn state_panel(model : LabModel, width : Int, height : Int) -> Node {
+fn state_panel(model : LabModel, width : Int32, height : Int32) -> Node {
   let job = if model.running_job > 0 {
     "running #\{model.running_job}"
   } else {
@@ -416,19 +416,22 @@ fn state_panel(model : LabModel, width : Int, height : Int) -> Node {
 fn panel(
   title~ : String,
   lines~ : Array[String],
-  width~ : Int,
-  height~ : Int,
+  width~ : Int32,
+  height~ : Int32,
 ) -> Node {
   vstack(
     style=Style::default()
       .fg(Rgb(124, 176, 198))
       .padding(Edge::all(1))
       .border(kind=Rounded)
-      .size(width=Int::max(1, width), height=Int::max(1, height)),
+      .size(width=Int32::max(1, width), height=Int32::max(1, height)),
   ) <| [
-    text(style=Style::default().bold(), fit_line(title, Int::max(1, width - 4))),
+    text(
+      style=Style::default().bold(),
+      fit_line(title, Int32::max(1, width - 4)),
+    ),
     text(""),
-    ..lines.map(line => text(fit_line(line, Int::max(1, width - 4)))),
+    ..lines.map(line => text(fit_line(line, Int32::max(1, width - 4)))),
   ]
 }
 
@@ -450,21 +453,21 @@ fn app() -> Program[LabModel, LabMsg] {
 }
 
 ///|
-fn scenario_count() -> Int {
+fn scenario_count() -> Int32 {
   7
 }
 
 ///|
-fn select_scenario(model : LabModel, delta : Int) -> LabModel {
-  let selected = Int::max(
+fn select_scenario(model : LabModel, delta : Int32) -> LabModel {
+  let selected = Int32::max(
     0,
-    Int::min(scenario_count() - 1, model.selected + delta),
+    Int32::min(scenario_count() - 1, model.selected + delta),
   )
   { ..model, selected, status: "choose a scenario", }
 }
 
 ///|
-fn scenario_key(index : Int) -> String {
+fn scenario_key(index : Int32) -> String {
   match index {
     0 => "p"
     1 => "x"
@@ -477,7 +480,7 @@ fn scenario_key(index : Int) -> String {
 }
 
 ///|
-fn scenario_title(index : Int) -> String {
+fn scenario_title(index : Int32) -> String {
   match index {
     0 => "Cmd::log/err_log output"
     1 => "External process"
@@ -490,7 +493,7 @@ fn scenario_title(index : Int) -> String {
 }
 
 ///|
-fn scenario_summary(index : Int) -> String {
+fn scenario_summary(index : Int32) -> String {
   match index {
     0 => "Cmd::log/err_log print above the live frame."
     1 => "Cmd::exec_process leaves raw mode, runs a process, then resumes."
@@ -506,7 +509,7 @@ fn scenario_summary(index : Int) -> String {
 ///|
 fn push_event(model : LabModel, event : String) -> LabModel {
   let next = model.events.push(event)
-  { ..model, events: next.drop(Int::max(0, next.length() - 7)), }
+  { ..model, events: next.drop(Int32::max(0, next.length() - 7)), }
 }
 
 ///|

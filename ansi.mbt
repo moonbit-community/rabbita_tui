@@ -105,12 +105,12 @@ pub fn ansi_enable_autowrap() -> String {
 }
 
 ///|
-pub fn ansi_move_cursor(row : Int, column : Int) -> String {
+pub fn ansi_move_cursor(row : Int32, column : Int32) -> String {
   "\u{1b}[\{row};\{column}H"
 }
 
 ///|
-pub fn ansi_move_cursor_up(rows : Int) -> String {
+pub fn ansi_move_cursor_up(rows : Int32) -> String {
   if rows <= 0 {
     ""
   } else {
@@ -301,13 +301,13 @@ fn paint_styled_frame_inline(frame : StyledFrame) -> String {
 
 ///|
 fn repaint_styled_frame_inline(
-  previous_height : Int,
+  previous_height : Int32,
   frame : StyledFrame,
 ) -> String {
   let out = StringBuilder()
   out.write_string(ansi_move_cursor_up(previous_height - 1))
   out.write_string("\r")
-  let limit = Int::max(previous_height, frame.lines.length())
+  let limit = Int32::max(previous_height, frame.lines.length())
   for index in 0..<limit {
     if index > 0 {
       out.write_string("\r\n")
@@ -332,7 +332,7 @@ fn diff_styled_frame_inline(
     out.write_string(ansi_move_cursor_up(previous.lines.length() - 1))
   }
   out.write_string("\r")
-  let limit = Int::max(previous.lines.length(), next.lines.length())
+  let limit = Int32::max(previous.lines.length(), next.lines.length())
   for index in 0..<limit {
     if index > 0 {
       out.write_string("\r\n")
@@ -357,7 +357,7 @@ fn diff_styled_frame_inline(
 ///|
 fn diff_styled_frame(previous : StyledFrame, next : StyledFrame) -> String {
   let out = StringBuilder()
-  let limit = Int::max(previous.lines.length(), next.lines.length())
+  let limit = Int32::max(previous.lines.length(), next.lines.length())
   for index in 0..<limit {
     let old_line = if index < previous.lines.length() {
       previous.lines[index]
@@ -380,7 +380,7 @@ fn diff_styled_frame(previous : StyledFrame, next : StyledFrame) -> String {
 ///|
 fn diff_lines(previous : Array[String], next : Array[String]) -> String {
   let out = StringBuilder()
-  let limit = Int::max(previous.length(), next.length())
+  let limit = Int32::max(previous.length(), next.length())
   for index in 0..<limit {
     let old_line = if index < previous.length() { previous[index] } else { "" }
     let new_line = if index < next.length() { next[index] } else { "" }
@@ -523,7 +523,7 @@ fn render_styled_lines(
 ///|
 fn render_styled_vstack(
   children : Array[Node],
-  gap : Int,
+  gap : Int32,
   size : Size,
   inherited : Style,
 ) -> Array[StyledLine] {
@@ -544,14 +544,14 @@ fn render_styled_vstack(
 ///|
 fn render_styled_hstack(
   children : Array[Node],
-  gap : Int,
+  gap : Int32,
   size : Size,
   inherited : Style,
 ) -> Array[StyledLine] {
   if children.is_empty() {
     return []
   }
-  let child_width = Int::max(
+  let child_width = Int32::max(
     1,
     (size.width - gap * (children.length() - 1)) / children.length(),
   )
@@ -603,8 +603,8 @@ fn render_styled_padded(
   inherited : Style,
 ) -> Array[StyledLine] {
   let inner = {
-    width: Int::max(0, size.width - edge.left - edge.right),
-    height: Int::max(0, size.height - edge.top - edge.bottom),
+    width: Int32::max(0, size.width - edge.left - edge.right),
+    height: Int32::max(0, size.height - edge.top - edge.bottom),
   }
   let out : Array[StyledLine] = []
   let blank = styled_line(repeat_to_width(" ", size.width), inherited)
@@ -691,15 +691,15 @@ fn render_styled_aligned(
 ) -> Array[StyledLine] {
   let raw = render_styled_lines(child, size, inherited)
   let lines : Array[StyledLine] = []
-  let limit = Int::min(raw.length(), size.height)
+  let limit = Int32::min(raw.length(), size.height)
   for index in 0..<limit {
     lines.push(fit_styled_line(raw[index], size.width))
   }
   let mut top = 0
   if vertical is Center {
-    top = Int::max(0, (size.height - lines.length()) / 2)
+    top = Int32::max(0, (size.height - lines.length()) / 2)
   } else if vertical is End {
-    top = Int::max(0, size.height - lines.length())
+    top = Int32::max(0, size.height - lines.length())
   }
   let out : Array[StyledLine] = []
   let blank = styled_line(repeat_to_width(" ", size.width), Style::default())
@@ -721,7 +721,7 @@ fn fit_styled_lines(
   size : Size,
 ) -> Array[StyledLine] {
   let out : Array[StyledLine] = []
-  let limit = Int::min(lines.length(), size.height)
+  let limit = Int32::min(lines.length(), size.height)
   for index in 0..<limit {
     out.push(fit_styled_line(lines[index], size.width))
   }
@@ -742,7 +742,7 @@ fn fit_styled_block(
 }
 
 ///|
-fn fit_styled_line(line : StyledLine, width : Int) -> StyledLine {
+fn fit_styled_line(line : StyledLine, width : Int32) -> StyledLine {
   let plain = fit_line(line.plain, width)
   if line.style != Style::default() {
     styled_line(plain, line.style)
@@ -756,7 +756,7 @@ fn fit_styled_line(line : StyledLine, width : Int) -> StyledLine {
 }
 
 ///|
-fn take_ansi_width(value : String, width : Int) -> String {
+fn take_ansi_width(value : String, width : Int32) -> String {
   if width <= 0 {
     return ""
   }
@@ -771,7 +771,7 @@ fn take_ansi_width(value : String, width : Int) -> String {
       saw_escape = true
       index = end
     } else {
-      let char = Int::unsafe_to_char(value.code_unit_at(index).to_int())
+      let char = Int32::unsafe_to_char(value.code_unit_at(index).to_int())
       let char_width = display_width(char.to_string())
       if used + char_width > width {
         break
@@ -788,14 +788,14 @@ fn take_ansi_width(value : String, width : Int) -> String {
 }
 
 ///|
-fn is_ansi_escape_start(value : String, index : Int) -> Bool {
+fn is_ansi_escape_start(value : String, index : Int32) -> Bool {
   index + 1 < value.length() &&
-  value.code_unit_at(index) == Int::to_uint16(0x1b) &&
-  value.code_unit_at(index + 1) == Int::to_uint16('['.to_int())
+  value.code_unit_at(index) == Int32::to_uint16(0x1b) &&
+  value.code_unit_at(index + 1) == Int32::to_uint16('['.to_int())
 }
 
 ///|
-fn ansi_escape_end(value : String, start : Int) -> Int {
+fn ansi_escape_end(value : String, start : Int32) -> Int32 {
   let mut index = start
   while index < value.length() {
     let code = value.code_unit_at(index).to_int()
@@ -808,10 +808,10 @@ fn ansi_escape_end(value : String, start : Int) -> Int {
 }
 
 ///|
-fn pad_styled_right(line : StyledLine, width : Int) -> StyledLine {
+fn pad_styled_right(line : StyledLine, width : Int32) -> StyledLine {
   let padding = repeat_to_width(
     " ",
-    Int::max(0, width - display_width(line.plain)),
+    Int32::max(0, width - display_width(line.plain)),
   )
   raw_styled_line("\{line.plain}\{padding}", "\{line.ansi}\{padding}")
 }
@@ -819,14 +819,14 @@ fn pad_styled_right(line : StyledLine, width : Int) -> StyledLine {
 ///|
 fn align_styled_line(
   line : StyledLine,
-  width : Int,
+  width : Int32,
   alignment : Align,
 ) -> StyledLine {
   let clipped = fit_styled_line(
     line,
-    Int::min(width, display_width(line.plain)),
+    Int32::min(width, display_width(line.plain)),
   )
-  let remaining = Int::max(0, width - display_width(clipped.plain))
+  let remaining = Int32::max(0, width - display_width(clipped.plain))
   match alignment {
     Start => pad_styled_right(clipped, width)
     Center => {
@@ -910,7 +910,7 @@ fn write_color_codes(
 }
 
 ///|
-fn clamp_color(value : Int) -> Int {
+fn clamp_color(value : Int32) -> Int32 {
   if value < 0 {
     0
   } else if value > 255 {

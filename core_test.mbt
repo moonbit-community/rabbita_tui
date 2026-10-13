@@ -1,12 +1,12 @@
 ///|
 enum TestMsg {
-  Add(Int)
+  Add(Int32)
   Rendered
   Pasted(String)
   Focused(String)
   AnyEvent(String)
-  ResizeSeen(Int, Int)
-  Clicked(Int, Int)
+  ResizeSeen(Int32, Int32)
+  Clicked(Int32, Int32)
 } derive(Eq, Debug)
 
 ///|

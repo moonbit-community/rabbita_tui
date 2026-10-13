@@ -1,20 +1,20 @@
 ///|
 pub(all) struct Size {
-  width : Int
-  height : Int
+  width : Int32
+  height : Int32
 } derive(Eq, Debug)
 
 ///|
 pub(all) struct Point {
-  x : Int
-  y : Int
+  x : Int32
+  y : Int32
 } derive(Eq, Debug)
 
 ///|
 pub(all) enum Color {
   Default
-  Ansi(Int)
-  Rgb(Int, Int, Int)
+  Ansi(Int32)
+  Rgb(Int32, Int32, Int32)
 } derive(Eq, Debug)
 
 ///|
@@ -26,14 +26,14 @@ pub(all) enum Align {
 
 ///|
 pub(all) struct Edge {
-  top : Int
-  right : Int
-  bottom : Int
-  left : Int
+  top : Int32
+  right : Int32
+  bottom : Int32
+  left : Int32
 } derive(Eq, Debug)
 
 ///|
-pub fn Edge::all(value : Int) -> Edge {
+pub fn Edge::all(value : Int32) -> Edge {
   { top: value, right: value, bottom: value, left: value, }
 }
 
@@ -43,22 +43,27 @@ pub fn Edge::zero() -> Edge {
 }
 
 ///|
-pub fn Edge::xy(x : Int, y : Int) -> Edge {
+pub fn Edge::xy(x : Int32, y : Int32) -> Edge {
   { top: y, right: x, bottom: y, left: x, }
 }
 
 ///|
-pub fn Edge::horizontal(value : Int) -> Edge {
+pub fn Edge::horizontal(value : Int32) -> Edge {
   { top: 0, right: value, bottom: 0, left: value, }
 }
 
 ///|
-pub fn Edge::vertical(value : Int) -> Edge {
+pub fn Edge::vertical(value : Int32) -> Edge {
   { top: value, right: 0, bottom: value, left: 0, }
 }
 
 ///|
-pub fn Edge::trbl(top : Int, right : Int, bottom : Int, left : Int) -> Edge {
+pub fn Edge::trbl(
+  top : Int32,
+  right : Int32,
+  bottom : Int32,
+  left : Int32,
+) -> Edge {
   { top, right, bottom, left, }
 }
 
@@ -83,15 +88,15 @@ pub(all) struct Style {
   blink : Bool
   reverse : Bool
   strikethrough : Bool
-  width : Int
-  height : Int
+  width : Int32
+  height : Int32
   padding : Edge
   border : Border
   align_horizontal : Align
   align_vertical : Align
   align_set : Bool
-  clip_width : Int
-  clip_height : Int
+  clip_width : Int32
+  clip_height : Int32
 } derive(Eq, Debug)
 
 ///|
@@ -164,20 +169,20 @@ pub fn Style::strikethrough(self : Style) -> Style {
 }
 
 ///|
-pub fn Style::width(self : Style, width : Int) -> Style {
+pub fn Style::width(self : Style, width : Int32) -> Style {
   { ..self, width, }
 }
 
 ///|
-pub fn Style::height(self : Style, height : Int) -> Style {
+pub fn Style::height(self : Style, height : Int32) -> Style {
   { ..self, height, }
 }
 
 ///|
 pub fn Style::size(
   self : Style,
-  width? : Int = -1,
-  height? : Int = -1,
+  width~ : Int32 = -1,
+  height~ : Int32 = -1,
 ) -> Style {
   { ..self, width, height, }
 }
@@ -188,15 +193,15 @@ pub fn Style::padding(self : Style, edge : Edge) -> Style {
 }
 
 ///|
-pub fn Style::border(self : Style, kind? : Border = Rounded) -> Style {
+pub fn Style::border(self : Style, kind~ : Border = Rounded) -> Style {
   { ..self, border: kind, }
 }
 
 ///|
 pub fn Style::align(
   self : Style,
-  horizontal? : Align = Start,
-  vertical? : Align = Start,
+  horizontal~ : Align = Start,
+  vertical~ : Align = Start,
 ) -> Style {
   {
     ..self,
@@ -280,8 +285,8 @@ enum Node {
   Empty
   Text(String, Style)
   Fragment(Array[Node])
-  VStack(Array[Node], Int)
-  HStack(Array[Node], Int)
+  VStack(Array[Node], Int32)
+  HStack(Array[Node], Int32)
   Pad(Node, Edge)
   Styled(Node, Style)
   Bordered(Node, Border, Style)
@@ -312,7 +317,7 @@ pub(all) enum Key {
   Ctrl(String)
   Alt(String)
   Modified(Key, KeyModifiers)
-  Function(Int)
+  Function(Int32)
   Unknown(String)
 } derive(Eq, Debug)
 
@@ -378,7 +383,7 @@ pub(all) enum MouseButton {
   Secondary
   WheelUp
   WheelDown
-  Other(Int)
+  Other(Int32)
 } derive(Eq, Debug)
 
 ///|
@@ -400,8 +405,8 @@ pub(all) enum MouseMode {
 pub(all) struct Mouse {
   button : MouseButton
   action : MouseAction
-  x : Int
-  y : Int
+  x : Int32
+  y : Int32
 } derive(Eq, Debug)
 
 ///|
@@ -458,9 +463,9 @@ pub(all) struct ProgramOptions {
   focus_events : Bool
   hide_cursor : Bool
   renderer_enabled : Bool
-  renderer_fps : Int
-  max_messages_per_frame : Int
-  resize_poll_millis : Int
+  renderer_fps : Int32
+  max_messages_per_frame : Int32
+  resize_poll_millis : Int32
 } derive(Eq, Debug)
 
 ///|
@@ -551,25 +556,25 @@ pub fn ProgramOptions::without_renderer(
 ///|
 pub fn ProgramOptions::fps(
   self : ProgramOptions,
-  value : Int,
+  value : Int32,
 ) -> ProgramOptions {
-  { ..self, renderer_fps: Int::max(0, value), }
+  { ..self, renderer_fps: Int32::max(0, value), }
 }
 
 ///|
 pub fn ProgramOptions::max_messages_per_frame(
   self : ProgramOptions,
-  value : Int,
+  value : Int32,
 ) -> ProgramOptions {
-  { ..self, max_messages_per_frame: Int::max(1, value), }
+  { ..self, max_messages_per_frame: Int32::max(1, value), }
 }
 
 ///|
 pub fn ProgramOptions::resize_poll_millis(
   self : ProgramOptions,
-  value : Int,
+  value : Int32,
 ) -> ProgramOptions {
-  { ..self, resize_poll_millis: Int::max(16, value), }
+  { ..self, resize_poll_millis: Int32::max(16, value), }
 }
 
 ///|

@@ -31,11 +31,11 @@ enum Cmd {
   CmdMessage(() -> Unit)
   CmdBatch(Array[Cmd])
   CmdSequence(Array[Cmd])
-  CmdDelay(Int, Cmd)
-  CmdEvery(Int, Cmd)
+  CmdDelay(Int32, Cmd)
+  CmdEvery(Int32, Cmd)
   CmdTask(async () -> Cmd)
   CmdSuspend(async () -> Cmd)
-  CmdExecProcess(String, Array[String], (Int) -> Cmd)
+  CmdExecProcess(String, Array[String], (Int32) -> Cmd)
   CmdTerminal(TerminalCommand)
 }
 
@@ -103,7 +103,7 @@ pub fn Cmd::sequence(cmds : Array[Cmd]) -> Cmd {
 }
 
 ///|
-pub fn Cmd::delay(milliseconds : Int, cmd : Cmd) -> Cmd {
+pub fn Cmd::delay(milliseconds : Int32, cmd : Cmd) -> Cmd {
   if cmd is NoCmd {
     NoCmd
   } else {
@@ -112,17 +112,17 @@ pub fn Cmd::delay(milliseconds : Int, cmd : Cmd) -> Cmd {
 }
 
 ///|
-pub fn delay(cmd : Cmd, milliseconds : Int) -> Cmd {
+pub fn delay(cmd : Cmd, milliseconds : Int32) -> Cmd {
   Cmd::delay(milliseconds, cmd)
 }
 
 ///|
-pub fn Cmd::tick(milliseconds : Int, cmd : Cmd) -> Cmd {
+pub fn Cmd::tick(milliseconds : Int32, cmd : Cmd) -> Cmd {
   Cmd::delay(milliseconds, cmd)
 }
 
 ///|
-pub fn Cmd::every(milliseconds : Int, cmd : Cmd) -> Cmd {
+pub fn Cmd::every(milliseconds : Int32, cmd : Cmd) -> Cmd {
   if cmd is NoCmd {
     NoCmd
   } else {
@@ -190,7 +190,7 @@ pub fn Cmd::suspend(task : async () -> Cmd) -> Cmd {
 }
 
 ///|
-pub fn Cmd::exec_process(command : String, done : (Int) -> Cmd) -> Cmd {
+pub fn Cmd::exec_process(command : String, done : (Int32) -> Cmd) -> Cmd {
   CmdExecProcess(command, [], done)
 }
 
@@ -198,7 +198,7 @@ pub fn Cmd::exec_process(command : String, done : (Int) -> Cmd) -> Cmd {
 pub fn Cmd::exec_process_with_args(
   command : String,
   args : Array[String],
-  done : (Int) -> Cmd,
+  done : (Int32) -> Cmd,
 ) -> Cmd {
   CmdExecProcess(command, args, done)
 }
@@ -326,7 +326,7 @@ pub async fn Cmd::run_with_terminal(
       cmd.run_with_terminal(terminal)
     }
     CmdEvery(milliseconds, cmd) => {
-      let interval = Int::max(1, milliseconds)
+      let interval = Int32::max(1, milliseconds)
       @async.sleep(interval)
       cmd.run_with_terminal(terminal)
     }
@@ -387,7 +387,7 @@ enum Sub[Msg] {
   PasteSub((String) -> Msg)
   FocusSub((Event) -> Msg)
   FocusChangesSub((Bool) -> Msg)
-  TickSub(Int, Msg)
+  TickSub(Int32, Msg)
 }
 
 ///|
@@ -463,7 +463,7 @@ pub fn[Msg] Sub::focus_changes(map : (Bool) -> Msg) -> Sub[Msg] {
 }
 
 ///|
-pub fn[Msg] Sub::tick(milliseconds : Int, msg : Msg) -> Sub[Msg] {
+pub fn[Msg] Sub::tick(milliseconds : Int32, msg : Msg) -> Sub[Msg] {
   TickSub(milliseconds, msg)
 }
 
@@ -527,7 +527,7 @@ fn[Msg] collect_subscription(
 pub(all) struct HeadlessOptions {
   size : Size
   render : Bool
-  max_steps : Int
+  max_steps : Int32
 } derive(Eq, Debug)
 
 ///|
@@ -554,9 +554,9 @@ pub fn HeadlessOptions::render(
 ///|
 pub fn HeadlessOptions::max_steps(
   self : HeadlessOptions,
-  value : Int,
+  value : Int32,
 ) -> HeadlessOptions {
-  { ..self, max_steps: Int::max(1, value), }
+  { ..self, max_steps: Int32::max(1, value), }
 }
 
 ///|
@@ -565,7 +565,7 @@ pub(all) struct ProgramRunResult[Model] {
   terminal_commands : Array[TerminalCommand]
   frames : Array[Frame]
   quit : Bool
-  steps : Int
+  steps : Int32
   limit_reached : Bool
 }
 
@@ -585,10 +585,10 @@ pub type Cell[Model, Msg] = Program[Model, Msg]
 ///|
 pub fn[Model, Msg] cell(
   model~ : Model,
-  init? : (Emit[Msg], Model) -> Cmd = (_, _) => none,
+  init~ : (Emit[Msg], Model) -> Cmd = (_, _) => none,
   update~ : (Emit[Msg], Msg, Model) -> (Cmd, Model),
   view~ : (Model) -> Node,
-  subscriptions? : (Model) -> Sub[Msg] = _ => NoSub,
+  subscriptions~ : (Model) -> Sub[Msg] = _ => NoSub,
 ) -> Cell[Model, Msg] {
   {
     model,
@@ -603,10 +603,10 @@ pub fn[Model, Msg] cell(
 ///|
 pub fn[Model, Msg] simple_cell(
   model~ : Model,
-  init? : (Emit[Msg], Model) -> Cmd = (_, _) => none,
+  init~ : (Emit[Msg], Model) -> Cmd = (_, _) => none,
   update~ : (Msg, Model) -> (Cmd, Model),
   view~ : (Model) -> Node,
-  subscriptions? : (Model) -> Sub[Msg] = _ => NoSub,
+  subscriptions~ : (Model) -> Sub[Msg] = _ => NoSub,
 ) -> Cell[Model, Msg] {
   cell(
     model~,
@@ -623,10 +623,10 @@ pub fn[Model, Msg] simple_cell(
 ///|
 pub fn[Model, Msg] cell_with_emit(
   model~ : Model,
-  init? : (Emit[Msg], Model) -> Cmd = (_, _) => none,
+  init~ : (Emit[Msg], Model) -> Cmd = (_, _) => none,
   update~ : (Emit[Msg], Msg, Model) -> (Cmd, Model),
   view~ : (Model) -> Node,
-  subscriptions? : (Model) -> Sub[Msg] = _ => NoSub,
+  subscriptions~ : (Model) -> Sub[Msg] = _ => NoSub,
 ) -> (Emit[Msg], Cell[Model, Msg]) {
   let program = cell(model~, init~, update~, view~, subscriptions~)
   let mut emit = Emit::new(_msg => ())
@@ -641,10 +641,10 @@ pub fn[Model, Msg] cell_with_emit(
 #deprecated("Use cell_with_emit instead.")
 pub fn[Model, Msg] cell_with_dispatch(
   model~ : Model,
-  init? : (Emit[Msg], Model) -> Cmd = (_, _) => none,
+  init~ : (Emit[Msg], Model) -> Cmd = (_, _) => none,
   update~ : (Emit[Msg], Msg, Model) -> (Cmd, Model),
   view~ : (Model) -> Node,
-  subscriptions? : (Model) -> Sub[Msg] = _ => NoSub,
+  subscriptions~ : (Model) -> Sub[Msg] = _ => NoSub,
 ) -> (Emit[Msg], Cell[Model, Msg]) {
   cell_with_emit(model~, init~, update~, view~, subscriptions~)
 }
@@ -717,8 +717,8 @@ pub fn[Model, Msg] Program::handle_event(
 ///|
 pub async fn[Model, Msg] Program::run_headless(
   self : Program[Model, Msg],
-  events? : Array[Event] = [],
-  options? : HeadlessOptions = HeadlessOptions::default(),
+  events~ : Array[Event] = [],
+  options~ : HeadlessOptions = HeadlessOptions::default(),
 ) -> ProgramRunResult[Model] {
   let queue = @aqueue.Queue(kind=Unbounded)
   let terminal_commands : Array[TerminalCommand] = []
@@ -792,7 +792,7 @@ pub async fn[Model, Msg] Program::run_headless(
 ///|
 priv struct HeadlessDrain {
   quit : Bool
-  steps : Int
+  steps : Int32
   limit_reached : Bool
 }
 
@@ -819,7 +819,7 @@ async fn[Model, Msg] drain_headless_messages(
   terminal_commands : Array[TerminalCommand],
   frames : Array[Frame],
   options : HeadlessOptions,
-  steps : Int,
+  steps : Int32,
 ) -> HeadlessDrain {
   let mut quit = false
   let mut next_steps = steps

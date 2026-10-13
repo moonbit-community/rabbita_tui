@@ -1,16 +1,16 @@
 ///|
-pub fn empty(style? : Style = Style::default()) -> Node {
+pub fn empty(style~ : Style = Style::default()) -> Node {
   apply_style(Empty, style)
 }
 
 ///|
-pub fn text(style? : Style = Style::default(), value : String) -> Node {
+pub fn text(style~ : Style = Style::default(), value : String) -> Node {
   apply_layout_style(Text(value, style_text(style)), style)
 }
 
 ///|
 pub fn fragment(
-  style? : Style = Style::default(),
+  style~ : Style = Style::default(),
   children : Array[Node],
 ) -> Node {
   apply_style(Fragment(children), style)
@@ -18,8 +18,8 @@ pub fn fragment(
 
 ///|
 pub fn vstack(
-  gap? : Int = 0,
-  style? : Style = Style::default(),
+  gap~ : Int32 = 0,
+  style~ : Style = Style::default(),
   children : Array[Node],
 ) -> Node {
   apply_style(VStack(children, gap), style)
@@ -27,8 +27,8 @@ pub fn vstack(
 
 ///|
 pub fn hstack(
-  gap? : Int = 0,
-  style? : Style = Style::default(),
+  gap~ : Int32 = 0,
+  style~ : Style = Style::default(),
   children : Array[Node],
 ) -> Node {
   apply_style(HStack(children, gap), style)
@@ -37,7 +37,7 @@ pub fn hstack(
 ///|
 pub fn pad(
   edge~ : Edge,
-  style? : Style = Style::default(),
+  style~ : Style = Style::default(),
   node : Node,
 ) -> Node {
   apply_style(Pad(node, edge), style)
@@ -45,8 +45,8 @@ pub fn pad(
 
 ///|
 pub fn border(
-  kind? : Border = Rounded,
-  style? : Style = Style::default(),
+  kind~ : Border = Rounded,
+  style~ : Style = Style::default(),
   node : Node,
 ) -> Node {
   apply_style(Bordered(node, kind, Style::default()), style)
@@ -55,7 +55,7 @@ pub fn border(
 ///|
 pub fn clip(
   size~ : Size,
-  style? : Style = Style::default(),
+  style~ : Style = Style::default(),
   node : Node,
 ) -> Node {
   apply_style(Clip(node, size), style)
@@ -63,9 +63,9 @@ pub fn clip(
 
 ///|
 pub fn sized(
-  width? : Int = -1,
-  height? : Int = -1,
-  style? : Style = Style::default(),
+  width~ : Int32 = -1,
+  height~ : Int32 = -1,
+  style~ : Style = Style::default(),
   node : Node,
 ) -> Node {
   apply_style(Sized(node, { width, height, }), style)
@@ -73,9 +73,9 @@ pub fn sized(
 
 ///|
 pub fn align(
-  horizontal? : Align = Start,
-  vertical? : Align = Start,
-  style? : Style = Style::default(),
+  horizontal~ : Align = Start,
+  vertical~ : Align = Start,
+  style~ : Style = Style::default(),
   node : Node,
 ) -> Node {
   apply_style(Aligned(node, horizontal, vertical), style)
@@ -84,9 +84,9 @@ pub fn align(
 ///|
 pub fn place(
   size~ : Size,
-  horizontal? : Align = Center,
-  vertical? : Align = Center,
-  style? : Style = Style::default(),
+  horizontal~ : Align = Center,
+  vertical~ : Align = Center,
+  style~ : Style = Style::default(),
   node : Node,
 ) -> Node {
   apply_style(Placed(node, size, horizontal, vertical), style)
@@ -94,8 +94,8 @@ pub fn place(
 
 ///|
 pub fn join_horizontal(
-  gap? : Int = 0,
-  style? : Style = Style::default(),
+  gap~ : Int32 = 0,
+  style~ : Style = Style::default(),
   children : Array[Node],
 ) -> Node {
   hstack(gap~, style~) <| children
@@ -103,15 +103,15 @@ pub fn join_horizontal(
 
 ///|
 pub fn join_vertical(
-  gap? : Int = 0,
-  style? : Style = Style::default(),
+  gap~ : Int32 = 0,
+  style~ : Style = Style::default(),
   children : Array[Node],
 ) -> Node {
   vstack(gap~, style~) <| children
 }
 
 ///|
-pub fn fill(style? : Style = Style::default(), value : String) -> Node {
+pub fn fill(style~ : Style = Style::default(), value : String) -> Node {
   Fill(value, style)
 }
 
@@ -236,15 +236,15 @@ fn render_aligned(
 ) -> Array[String] {
   let raw = render_lines(child, size, inherited)
   let lines : Array[String] = []
-  let limit = Int::min(raw.length(), size.height)
+  let limit = Int32::min(raw.length(), size.height)
   for index in 0..<limit {
     lines.push(take_width(raw[index], size.width))
   }
   let mut top = 0
   if vertical is Center {
-    top = Int::max(0, (size.height - lines.length()) / 2)
+    top = Int32::max(0, (size.height - lines.length()) / 2)
   } else if vertical is End {
-    top = Int::max(0, size.height - lines.length())
+    top = Int32::max(0, size.height - lines.length())
   }
   let out : Array[String] = []
   let blank = repeat_to_width(" ", size.width)
@@ -263,7 +263,7 @@ fn render_aligned(
 ///|
 fn render_vstack(
   children : Array[Node],
-  gap : Int,
+  gap : Int32,
   size : Size,
   inherited : Style,
 ) -> Array[String] {
@@ -284,14 +284,14 @@ fn render_vstack(
 ///|
 fn render_hstack(
   children : Array[Node],
-  gap : Int,
+  gap : Int32,
   size : Size,
   inherited : Style,
 ) -> Array[String] {
   if children.is_empty() {
     return []
   }
-  let child_width = Int::max(
+  let child_width = Int32::max(
     1,
     (size.width - gap * (children.length() - 1)) / children.length(),
   )
@@ -338,8 +338,8 @@ fn render_padded(
   inherited : Style,
 ) -> Array[String] {
   let inner = {
-    width: Int::max(0, size.width - edge.left - edge.right),
-    height: Int::max(0, size.height - edge.top - edge.bottom),
+    width: Int32::max(0, size.width - edge.left - edge.right),
+    height: Int32::max(0, size.height - edge.top - edge.bottom),
   }
   let out : Array[String] = []
   let blank = repeat_to_width(" ", size.width)
@@ -409,7 +409,7 @@ fn split_lines(value : String) -> Array[String] {
 ///|
 pub fn fit_lines(lines : Array[String], size : Size) -> Array[String] {
   let out : Array[String] = []
-  let limit = Int::min(lines.length(), size.height)
+  let limit = Int32::min(lines.length(), size.height)
   for index in 0..<limit {
     out.push(fit_line(lines[index], size.width))
   }
@@ -417,7 +417,7 @@ pub fn fit_lines(lines : Array[String], size : Size) -> Array[String] {
 }
 
 ///|
-pub fn wrap_text(value : String, width : Int) -> Array[String] {
+pub fn wrap_text(value : String, width : Int32) -> Array[String] {
   if width <= 0 {
     return [""]
   }
@@ -429,7 +429,7 @@ pub fn wrap_text(value : String, width : Int) -> Array[String] {
 }
 
 ///|
-fn wrap_paragraph(value : String, width : Int, out : Array[String]) -> Unit {
+fn wrap_paragraph(value : String, width : Int32, out : Array[String]) -> Unit {
   if value == "" {
     out.push("")
     return
@@ -458,7 +458,7 @@ fn wrap_paragraph(value : String, width : Int, out : Array[String]) -> Unit {
 }
 
 ///|
-fn wrap_long_word(value : String, width : Int, out : Array[String]) -> String {
+fn wrap_long_word(value : String, width : Int32, out : Array[String]) -> String {
   let mut line = ""
   let mut used = 0
   for char in value {
@@ -506,7 +506,7 @@ pub fn fit_block(lines : Array[String], size : Size) -> Array[String] {
 }
 
 ///|
-pub fn fit_line(line : String, width : Int) -> String {
+pub fn fit_line(line : String, width : Int32) -> String {
   if width <= 0 {
     ""
   } else if display_width(line) <= width {
@@ -517,7 +517,7 @@ pub fn fit_line(line : String, width : Int) -> String {
 }
 
 ///|
-pub fn pad_right(line : String, width : Int) -> String {
+pub fn pad_right(line : String, width : Int32) -> String {
   let current = display_width(line)
   if current >= width {
     line
@@ -528,13 +528,13 @@ pub fn pad_right(line : String, width : Int) -> String {
 }
 
 ///|
-pub fn align_line(line : String, width : Int, alignment : Align) -> String {
+pub fn align_line(line : String, width : Int32, alignment : Align) -> String {
   let clipped = if display_width(line) > width {
     take_width(line, width)
   } else {
     line
   }
-  let remaining = Int::max(0, width - display_width(clipped))
+  let remaining = Int32::max(0, width - display_width(clipped))
   match alignment {
     Start => {
       let padding = repeat_to_width(" ", remaining)
@@ -554,7 +554,7 @@ pub fn align_line(line : String, width : Int, alignment : Align) -> String {
 }
 
 ///|
-pub fn repeat_to_width(value : String, width : Int) -> String {
+pub fn repeat_to_width(value : String, width : Int32) -> String {
   if width <= 0 || value == "" {
     return ""
   }
@@ -568,7 +568,7 @@ pub fn repeat_to_width(value : String, width : Int) -> String {
 }
 
 ///|
-pub fn display_width(value : String) -> Int {
+pub fn display_width(value : String) -> Int32 {
   let mut width = 0
   for char in value {
     width += char_width(char)
@@ -577,7 +577,7 @@ pub fn display_width(value : String) -> Int {
 }
 
 ///|
-pub fn take_width(value : String, width : Int) -> String {
+pub fn take_width(value : String, width : Int32) -> String {
   if width <= 0 {
     return ""
   }
@@ -595,7 +595,7 @@ pub fn take_width(value : String, width : Int) -> String {
 }
 
 ///|
-fn char_width(char : Char) -> Int {
+fn char_width(char : Char) -> Int32 {
   let code = char.to_int()
   if (code >= 0x1100 && code <= 0x115f) ||
     (code >= 0x2e80 && code <= 0xa4cf && !(code >= 0x2500 && code <= 0x259f)) ||

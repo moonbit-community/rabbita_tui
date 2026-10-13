@@ -53,13 +53,13 @@ struct CodexModel {
   prompt : Textarea
   draft_prompt : String
   history : Vector[String]
-  history_index : Int
-  active_menu : Int
-  scroll_offset : Int
+  history_index : Int32
+  active_menu : Int32
+  scroll_offset : Int32
   streaming : Bool
-  stream_index : Int
-  width : Int
-  height : Int
+  stream_index : Int32
+  width : Int32
+  height : Int32
   status : String
 } derive(Eq, Debug)
 
@@ -209,7 +209,7 @@ fn history_prev(model : CodexModel) -> CodexModel {
   let index = if model.history_index < 0 {
     model.history.length() - 1
   } else {
-    Int::max(0, model.history_index - 1)
+    Int32::max(0, model.history_index - 1)
   }
   {
     ..model,
@@ -285,7 +285,8 @@ fn stream_chunk_model(model : CodexModel) -> (Bool, CodexModel) {
   let scroll_offset = if model.scroll_offset == 0 {
     0
   } else {
-    model.scroll_offset + Int::max(0, max_scroll_offset(next) - old_max_scroll)
+    model.scroll_offset +
+    Int32::max(0, max_scroll_offset(next) - old_max_scroll)
   }
   (next_index < chunks.length(), clamp_scroll({ ..next, scroll_offset, }))
 }
@@ -304,15 +305,15 @@ fn view(model : CodexModel) -> Node {
 }
 
 ///|
-fn content_width(width : Int) -> Int {
-  Int::max(1, width - 1)
+fn content_width(width : Int32) -> Int32 {
+  Int32::max(1, width - 1)
 }
 
 ///|
 fn transcript_view(model : CodexModel, size : Size) -> Node {
   let lines = pane_lines(model, size.width)
-  let start = Int::max(0, lines.length() - size.height - model.scroll_offset)
-  let end = Int::min(lines.length(), start + size.height)
+  let start = Int32::max(0, lines.length() - size.height - model.scroll_offset)
+  let end = Int32::min(lines.length(), start + size.height)
   let visible = Array::makei(end - start, relative_index => {
     let index = start + relative_index
     text(style=lines[index].style, fit_line(lines[index].text, size.width))
@@ -324,18 +325,18 @@ fn transcript_view(model : CodexModel, size : Size) -> Node {
 }
 
 ///|
-fn transcript_pane_height(model : CodexModel) -> Int {
-  Int::max(1, live_height(model) - 7)
+fn transcript_pane_height(model : CodexModel) -> Int32 {
+  Int32::max(1, live_height(model) - 7)
 }
 
 ///|
-fn live_height(model : CodexModel) -> Int {
-  Int::max(8, model.height)
+fn live_height(model : CodexModel) -> Int32 {
+  Int32::max(8, model.height)
 }
 
 ///|
-fn max_scroll_offset(model : CodexModel) -> Int {
-  Int::max(
+fn max_scroll_offset(model : CodexModel) -> Int32 {
+  Int32::max(
     0,
     pane_lines(model, content_width(model.width)).length() -
     transcript_pane_height(model),
@@ -346,25 +347,25 @@ fn max_scroll_offset(model : CodexModel) -> Int {
 fn clamp_scroll(model : CodexModel) -> CodexModel {
   {
     ..model,
-    scroll_offset: Int::min(
-      Int::max(0, model.scroll_offset),
+    scroll_offset: Int32::min(
+      Int32::max(0, model.scroll_offset),
       max_scroll_offset(model),
     ),
   }
 }
 
 ///|
-fn scroll_by(model : CodexModel, delta : Int) -> CodexModel {
+fn scroll_by(model : CodexModel, delta : Int32) -> CodexModel {
   clamp_scroll({ ..model, scroll_offset: model.scroll_offset + delta, })
 }
 
 ///|
-fn page_scroll_delta(model : CodexModel) -> Int {
-  Int::max(1, transcript_pane_height(model) - 2)
+fn page_scroll_delta(model : CodexModel) -> Int32 {
+  Int32::max(1, transcript_pane_height(model) - 2)
 }
 
 ///|
-fn pane_lines(model : CodexModel, width : Int) -> Array[RenderLine] {
+fn pane_lines(model : CodexModel, width : Int32) -> Array[RenderLine] {
   match model.active_menu {
     1 => plan_lines(model, width)
     2 => log_lines(model, width)
@@ -373,7 +374,7 @@ fn pane_lines(model : CodexModel, width : Int) -> Array[RenderLine] {
 }
 
 ///|
-fn transcript_lines(model : CodexModel, width : Int) -> Array[RenderLine] {
+fn transcript_lines(model : CodexModel, width : Int32) -> Array[RenderLine] {
   let lines = model.transcript
     .map(entry => {
       [..entry_lines(entry, width), { text: "", style: Style::default(), }]
@@ -397,7 +398,7 @@ fn transcript_lines(model : CodexModel, width : Int) -> Array[RenderLine] {
 }
 
 ///|
-fn entry_lines(entry : Entry, width : Int) -> Array[RenderLine] {
+fn entry_lines(entry : Entry, width : Int32) -> Array[RenderLine] {
   let prefix = role_prefix(entry.role)
   let body = if entry.text == "" { "..." } else { entry.text }
   let mut in_diff = false
@@ -416,9 +417,9 @@ fn entry_lines(entry : Entry, width : Int) -> Array[RenderLine] {
           role_style(entry.role)
         }
         let line_parts = if in_diff {
-          clip_code_line(raw, Int::max(1, width - display_width(prefix)))
+          clip_code_line(raw, Int32::max(1, width - display_width(prefix)))
         } else {
-          wrap_text(raw, Int::max(1, width - display_width(prefix)))
+          wrap_text(raw, Int32::max(1, width - display_width(prefix)))
         }
         line_parts.map(part => (part, style))
       }
@@ -452,7 +453,7 @@ fn split_entry_lines(value : String) -> Array[String] {
 }
 
 ///|
-fn clip_code_line(value : String, width : Int) -> Array[String] {
+fn clip_code_line(value : String, width : Int32) -> Array[String] {
   [take_width(value, width)]
 }
 
@@ -475,7 +476,7 @@ fn diff_line_style(line : String) -> Style {
 }
 
 ///|
-fn plan_lines(model : CodexModel, width : Int) -> Array[RenderLine] {
+fn plan_lines(model : CodexModel, width : Int32) -> Array[RenderLine] {
   let rows = [
     ("Inspect project context", model.stream_index > 0),
     ("Apply focused patch", model.stream_index > 1),
@@ -525,7 +526,7 @@ fn plan_lines(model : CodexModel, width : Int) -> Array[RenderLine] {
 }
 
 ///|
-fn log_lines(model : CodexModel, width : Int) -> Array[RenderLine] {
+fn log_lines(model : CodexModel, width : Int32) -> Array[RenderLine] {
   [
     {
       text: fit_line("Logs · runtime", width),
@@ -561,7 +562,7 @@ fn log_lines(model : CodexModel, width : Int) -> Array[RenderLine] {
 }
 
 ///|
-fn activity_view(model : CodexModel, width : Int) -> Node {
+fn activity_view(model : CodexModel, width : Int32) -> Node {
   if model.streaming {
     let right = "Esc cancel"
     text(
@@ -589,7 +590,7 @@ fn activity_view(model : CodexModel, width : Int) -> Node {
 }
 
 ///|
-fn progress_label(index : Int) -> String {
+fn progress_label(index : Int32) -> String {
   match index {
     0 => "thinking"
     1 => "inspecting files"
@@ -600,18 +601,18 @@ fn progress_label(index : Int) -> String {
 }
 
 ///|
-fn composer_view(model : CodexModel, width : Int) -> Node {
-  let inner = Int::max(1, width - 2)
+fn composer_view(model : CodexModel, width : Int32) -> Node {
+  let inner = Int32::max(1, width - 2)
   vstack(
     style=Style::default()
       .fg(if model.streaming { Ansi(11) } else { Ansi(109) })
       .border(kind=Rounded)
       .clip({ width, height: 4, }),
-  ) <| prompt_lines(model.prompt, Int::max(1, inner - 2))
+  ) <| prompt_lines(model.prompt, Int32::max(1, inner - 2))
 }
 
 ///|
-fn prompt_lines(prompt : Textarea, width : Int) -> Array[Node] {
+fn prompt_lines(prompt : Textarea, width : Int32) -> Array[Node] {
   let prefix = "› "
   if prompt.value() == "" {
     return [
@@ -619,8 +620,8 @@ fn prompt_lines(prompt : Textarea, width : Int) -> Array[Node] {
       text(repeat_to_width(" ", width)),
     ]
   }
-  let start = Int::max(0, prompt.row - 1)
-  let end = Int::min(prompt.lines.length(), start + 2)
+  let start = Int32::max(0, prompt.row - 1)
+  let end = Int32::min(prompt.lines.length(), start + 2)
   let visible = Array::makei(end - start, relative_index => {
     let index = start + relative_index
     let line = prompt.lines[index]
@@ -639,7 +640,7 @@ fn prompt_lines(prompt : Textarea, width : Int) -> Array[Node] {
 }
 
 ///|
-fn line_with_prompt_cursor(line : String, column : Int) -> String {
+fn line_with_prompt_cursor(line : String, column : Int32) -> String {
   let offset = if column <= 0 {
     0
   } else {
@@ -664,7 +665,7 @@ fn subscriptions(_model : CodexModel) -> Sub[CodexMsg] {
 }
 
 ///|
-fn help_view(width : Int) -> Node {
+fn help_view(width : Int32) -> Node {
   let help = if width < 48 {
     "enter submit  tab menu  ctrl+c"
   } else if width < 72 {
@@ -692,7 +693,7 @@ fn demo_app() -> Cell[CodexModel, CodexMsg] {
 }
 
 ///|
-fn top_bar(model : CodexModel, width : Int) -> Node {
+fn top_bar(model : CodexModel, width : Int32) -> Node {
   let labels = ["chat", "plan", "logs"]
   let left = StringBuilder()
   left.write_string("  codex  /repo  ")
@@ -736,13 +737,13 @@ fn role_style(role : Role) -> Style {
 }
 
 ///|
-fn spinner_text(frame : Int) -> String {
+fn spinner_text(frame : Int32) -> String {
   let frames = ["-", "\\", "|", "/"]
   frames[frame % frames.length()]
 }
 
 ///|
-fn plain_line(node : Node, width : Int) -> String {
+fn plain_line(node : Node, width : Int32) -> String {
   let lines = render_plain(node, { width, height: 1, })
   if lines.is_empty() {
     repeat_to_width(" ", width)
