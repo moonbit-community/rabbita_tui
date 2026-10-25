@@ -395,8 +395,8 @@ The layout API is intentionally small and composable.
 | Function | Purpose |
 | --- | --- |
 | `text(style?, value)` | text node |
-| `vstack(gap?, style?) <| nodes` / `hstack(gap?, style?) <| nodes` | vertical or horizontal layout |
-| `fragment(style?) <| nodes` | render a sequence of child nodes |
+| `vstack(gap?, style?) <\| nodes` / `hstack(gap?, style?) <\| nodes` | vertical or horizontal layout |
+| `fragment(style?) <\| nodes` | render a sequence of child nodes |
 | `pad(edge=..., style?, node)` | add padding |
 | `border(kind?, style?, node)` | add a border |
 | `sized(width?, height?, style?, node)` | force a size |
