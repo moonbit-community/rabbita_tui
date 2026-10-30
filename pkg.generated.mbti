@@ -8,7 +8,7 @@ import {
 // Values
 pub fn align(horizontal? : Align, vertical? : Align, style? : Style, Node) -> Node
 
-pub fn align_line(String, Int, Align) -> String
+pub fn align_line(String, Int32, Align) -> String
 
 pub fn ansi_clear_line() -> String
 
@@ -36,9 +36,9 @@ pub fn ansi_hide_cursor() -> String
 
 pub fn ansi_leave_alternate_screen() -> String
 
-pub fn ansi_move_cursor(Int, Int) -> String
+pub fn ansi_move_cursor(Int32, Int32) -> String
 
-pub fn ansi_move_cursor_up(Int) -> String
+pub fn ansi_move_cursor_up(Int32) -> String
 
 pub fn ansi_reset() -> String
 
@@ -69,13 +69,13 @@ pub fn[Model, Msg] cell_with_emit(model~ : Model, init? : (Emit[Msg], Model) -> 
 
 pub fn clip(size~ : Size, style? : Style, Node) -> Node
 
-pub fn delay(Cmd, Int) -> Cmd
+pub fn delay(Cmd, Int32) -> Cmd
 
 pub fn diff_ansi(Frame?, Frame) -> String
 
 pub fn diff_node_ansi(Frame?, Node, Size) -> (Frame, String)
 
-pub fn display_width(String) -> Int
+pub fn display_width(String) -> Int32
 
 pub fn effect(async () -> Unit noraise) -> Cmd
 
@@ -87,7 +87,7 @@ pub fn fill(style? : Style, String) -> Node
 
 pub fn fit_block(Array[String], Size) -> Array[String]
 
-pub fn fit_line(String, Int) -> String
+pub fn fit_line(String, Int32) -> String
 
 pub fn fit_lines(Array[String], Size) -> Array[String]
 
@@ -95,19 +95,19 @@ pub fn fragment(style? : Style, Array[Node]) -> Node
 
 pub fn full_render_ansi(Node, Size) -> String
 
-pub fn hstack(gap? : Int, style? : Style, Array[Node]) -> Node
+pub fn hstack(gap? : Int32, style? : Style, Array[Node]) -> Node
 
-pub fn is_tty(Int) -> Bool
+pub fn is_tty(Int32) -> Bool
 
-pub fn join_horizontal(gap? : Int, style? : Style, Array[Node]) -> Node
+pub fn join_horizontal(gap? : Int32, style? : Style, Array[Node]) -> Node
 
-pub fn join_vertical(gap? : Int, style? : Style, Array[Node]) -> Node
+pub fn join_vertical(gap? : Int32, style? : Style, Array[Node]) -> Node
 
 pub let none : Cmd
 
 pub fn pad(edge~ : Edge, style? : Style, Node) -> Node
 
-pub fn pad_right(String, Int) -> String
+pub fn pad_right(String, Int32) -> String
 
 pub fn paint_frame_ansi(Frame) -> String
 
@@ -121,23 +121,23 @@ pub fn render_ansi(Node, Size) -> String
 
 pub fn render_plain(Node, Size) -> Array[String]
 
-pub fn repeat_to_width(String, Int) -> String
+pub fn repeat_to_width(String, Int32) -> String
 
 pub fn restore_terminal() -> Unit
 
 pub fn[Model, Msg] simple_cell(model~ : Model, init? : (Emit[Msg], Model) -> Cmd, update~ : (Msg, Model) -> (Cmd, Model), view~ : (Model) -> Node, subscriptions? : (Model) -> Sub[Msg]) -> Program[Model, Msg]
 
-pub fn sized(width? : Int, height? : Int, style? : Style, Node) -> Node
+pub fn sized(width? : Int32, height? : Int32, style? : Style, Node) -> Node
 
-pub fn take_width(String, Int) -> String
+pub fn take_width(String, Int32) -> String
 
 pub fn terminal_size() -> Size raise TerminalError
 
 pub fn text(style? : Style, String) -> Node
 
-pub fn vstack(gap? : Int, style? : Style, Array[Node]) -> Node
+pub fn vstack(gap? : Int32, style? : Style, Array[Node]) -> Node
 
-pub fn wrap_text(String, Int) -> Array[String]
+pub fn wrap_text(String, Int32) -> Array[String]
 
 // Errors
 pub(all) suberror TerminalError {
@@ -145,6 +145,12 @@ pub(all) suberror TerminalError {
   NotATty(String)
   NativeError(String)
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn TerminalError::equal(Self, Self) -> Bool
+#deprecated
+pub fn TerminalError::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn TerminalError::to_repr(Self) -> @debug.Repr
 
 // Types and methods
 pub(all) enum Align {
@@ -152,6 +158,12 @@ pub(all) enum Align {
   Center
   End
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn Align::equal(Self, Self) -> Bool
+#deprecated
+pub fn Align::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Align::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Border {
   NoBorder
@@ -161,6 +173,12 @@ pub(all) enum Border {
   Double
   Thick
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn Border::equal(Self, Self) -> Bool
+#deprecated
+pub fn Border::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Border::to_repr(Self) -> @debug.Repr
 
 pub(all) struct CancelToken {
   mut cancelled : Bool
@@ -168,12 +186,14 @@ pub(all) struct CancelToken {
 pub fn CancelToken::cancel(Self) -> Unit
 pub fn CancelToken::is_cancelled(Self) -> Bool
 pub fn CancelToken::new() -> Self
+#deprecated
+pub fn CancelToken::to_repr(Self) -> @debug.Repr
 
 type Cmd
 pub fn[A, E : Error] Cmd::attempt((Result[A, E]) -> Self, async () -> A raise E) -> Self
 pub fn Cmd::batch(Array[Self]) -> Self
 pub fn Cmd::clear_screen() -> Self
-pub fn Cmd::delay(Int, Self) -> Self
+pub fn Cmd::delay(Int32, Self) -> Self
 pub fn Cmd::disable_bracketed_paste() -> Self
 pub fn Cmd::disable_focus_events() -> Self
 pub fn Cmd::disable_mouse() -> Self
@@ -184,10 +204,10 @@ pub fn Cmd::enable_mouse(MouseMode) -> Self
 pub fn Cmd::enter_alternate_screen() -> Self
 pub fn Cmd::err_log(String) -> Self
 pub fn Cmd::err_write(String) -> Self
-pub fn Cmd::every(Int, Self) -> Self
+pub fn Cmd::every(Int32, Self) -> Self
 pub fn[A] Cmd::exec((A) -> Self, async () -> A noraise) -> Self
-pub fn Cmd::exec_process(String, (Int) -> Self) -> Self
-pub fn Cmd::exec_process_with_args(String, Array[String], (Int) -> Self) -> Self
+pub fn Cmd::exec_process(String, (Int32) -> Self) -> Self
+pub fn Cmd::exec_process_with_args(String, Array[String], (Int32) -> Self) -> Self
 pub fn Cmd::hide_cursor() -> Self
 pub fn Cmd::is_none(Self) -> Bool
 pub fn Cmd::leave_alternate_screen() -> Self
@@ -206,26 +226,38 @@ pub fn Cmd::show_cursor() -> Self
 pub fn Cmd::suspend(async () -> Self) -> Self
 pub fn Cmd::terminal(TerminalCommand) -> Self
 pub fn Cmd::terminal_commands(Self) -> Array[TerminalCommand]
-pub fn Cmd::tick(Int, Self) -> Self
+pub fn Cmd::tick(Int32, Self) -> Self
 pub fn Cmd::write(String) -> Self
 
 pub(all) enum Color {
   Default
-  Ansi(Int)
-  Rgb(Int, Int, Int)
+  Ansi(Int32)
+  Rgb(Int32, Int32, Int32)
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn Color::equal(Self, Self) -> Bool
+#deprecated
+pub fn Color::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Color::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Edge {
-  top : Int
-  right : Int
-  bottom : Int
-  left : Int
+  top : Int32
+  right : Int32
+  bottom : Int32
+  left : Int32
 } derive(Eq, @debug.Debug)
-pub fn Edge::all(Int) -> Self
-pub fn Edge::horizontal(Int) -> Self
-pub fn Edge::trbl(Int, Int, Int, Int) -> Self
-pub fn Edge::vertical(Int) -> Self
-pub fn Edge::xy(Int, Int) -> Self
+pub fn Edge::all(Int32) -> Self
+#deprecated
+pub fn Edge::equal(Self, Self) -> Bool
+pub fn Edge::horizontal(Int32) -> Self
+#deprecated
+pub fn Edge::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Edge::to_repr(Self) -> @debug.Repr
+pub fn Edge::trbl(Int32, Int32, Int32, Int32) -> Self
+pub fn Edge::vertical(Int32) -> Self
+pub fn Edge::xy(Int32, Int32) -> Self
 pub fn Edge::zero() -> Self
 
 #alias(Dispatch, deprecated)
@@ -245,24 +277,48 @@ pub(all) enum Event {
   Quit
   UnknownEvent(String)
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn Event::equal(Self, Self) -> Bool
+#deprecated
+pub fn Event::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Event::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Frame {
   lines : Array[String]
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn Frame::equal(Self, Self) -> Bool
 pub fn Frame::from_node(Node, Size) -> Self
+#deprecated
+pub fn Frame::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Frame::to_repr(Self) -> @debug.Repr
 pub fn Frame::to_string(Self) -> String
 
 pub(all) struct HeadlessOptions {
   size : Size
   render : Bool
-  max_steps : Int
+  max_steps : Int32
 } derive(Eq, @debug.Debug)
 pub fn HeadlessOptions::default() -> Self
-pub fn HeadlessOptions::max_steps(Self, Int) -> Self
+#deprecated
+pub fn HeadlessOptions::equal(Self, Self) -> Bool
+pub fn HeadlessOptions::max_steps(Self, Int32) -> Self
+#deprecated
+pub fn HeadlessOptions::not_equal(Self, Self) -> Bool
 pub fn HeadlessOptions::render(Self, Bool) -> Self
 pub fn HeadlessOptions::size(Self, Size) -> Self
+#deprecated
+pub fn HeadlessOptions::to_repr(Self) -> @debug.Repr
 
 type InputDecoder derive(Eq, @debug.Debug)
+#deprecated
+pub fn InputDecoder::equal(Self, Self) -> Bool
+#deprecated
+pub fn InputDecoder::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn InputDecoder::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Key {
   Char(String)
@@ -283,9 +339,15 @@ pub(all) enum Key {
   Ctrl(String)
   Alt(String)
   Modified(Key, KeyModifiers)
-  Function(Int)
+  Function(Int32)
   Unknown(String)
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn Key::equal(Self, Self) -> Bool
+#deprecated
+pub fn Key::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Key::to_repr(Self) -> @debug.Repr
 
 pub(all) struct KeyModifiers {
   shift : Bool
@@ -297,24 +359,42 @@ pub(all) struct KeyModifiers {
 } derive(Eq, @debug.Debug)
 pub fn KeyModifiers::alt(Self, Bool) -> Self
 pub fn KeyModifiers::ctrl(Self, Bool) -> Self
+#deprecated
+pub fn KeyModifiers::equal(Self, Self) -> Bool
 pub fn KeyModifiers::hyper(Self, Bool) -> Self
 pub fn KeyModifiers::meta(Self, Bool) -> Self
 pub fn KeyModifiers::none() -> Self
+#deprecated
+pub fn KeyModifiers::not_equal(Self, Self) -> Bool
 pub fn KeyModifiers::shift(Self, Bool) -> Self
 pub fn KeyModifiers::super_key(Self, Bool) -> Self
+#deprecated
+pub fn KeyModifiers::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Mouse {
   button : MouseButton
   action : MouseAction
-  x : Int
-  y : Int
+  x : Int32
+  y : Int32
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn Mouse::equal(Self, Self) -> Bool
+#deprecated
+pub fn Mouse::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Mouse::to_repr(Self) -> @debug.Repr
 
 pub(all) enum MouseAction {
   Press
   Release
   Drag
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn MouseAction::equal(Self, Self) -> Bool
+#deprecated
+pub fn MouseAction::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn MouseAction::to_repr(Self) -> @debug.Repr
 
 pub(all) enum MouseButton {
   Primary
@@ -322,8 +402,14 @@ pub(all) enum MouseButton {
   Secondary
   WheelUp
   WheelDown
-  Other(Int)
+  Other(Int32)
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn MouseButton::equal(Self, Self) -> Bool
+#deprecated
+pub fn MouseButton::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn MouseButton::to_repr(Self) -> @debug.Repr
 
 pub(all) enum MouseMode {
   MouseOff
@@ -331,13 +417,31 @@ pub(all) enum MouseMode {
   MouseButtonMotion
   MouseAllMotion
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn MouseMode::equal(Self, Self) -> Bool
+#deprecated
+pub fn MouseMode::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn MouseMode::to_repr(Self) -> @debug.Repr
 
 type Node derive(Eq, @debug.Debug)
+#deprecated
+pub fn Node::equal(Self, Self) -> Bool
+#deprecated
+pub fn Node::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Node::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Point {
-  x : Int
-  y : Int
+  x : Int32
+  y : Int32
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn Point::equal(Self, Self) -> Bool
+#deprecated
+pub fn Point::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Point::to_repr(Self) -> @debug.Repr
 
 #alias(Cell)
 pub struct Program[Model, Msg] {
@@ -362,8 +466,8 @@ pub async fn[Model, Msg] Program::run_with_cancel_token_result(Self[Model, Msg],
 pub async fn[Model, Msg] Program::run_with_options(Self[Model, Msg], ProgramOptions) -> Unit raise TerminalError
 pub async fn[Model, Msg] Program::run_with_options_result(Self[Model, Msg], ProgramOptions) -> ProgramRuntimeResult[Model] raise TerminalError
 pub async fn[Model, Msg] Program::run_with_options_returning_model(Self[Model, Msg], ProgramOptions) -> Model raise TerminalError
-pub async fn[Model, Msg] Program::run_with_timeout(Self[Model, Msg], ProgramOptions, Int) -> Model raise TerminalError
-pub async fn[Model, Msg] Program::run_with_timeout_result(Self[Model, Msg], ProgramOptions, Int) -> ProgramRuntimeResult[Model] raise TerminalError
+pub async fn[Model, Msg] Program::run_with_timeout(Self[Model, Msg], ProgramOptions, Int32) -> Model raise TerminalError
+pub async fn[Model, Msg] Program::run_with_timeout_result(Self[Model, Msg], ProgramOptions, Int32) -> ProgramRuntimeResult[Model] raise TerminalError
 pub fn[Model, Msg] Program::step(Self[Model, Msg], Emit[Msg], Msg) -> Cmd
 pub fn[Model, Msg] Program::subscriptions(Self[Model, Msg]) -> Sub[Msg]
 pub fn[Model, Msg] Program::view(Self[Model, Msg]) -> Node
@@ -373,6 +477,12 @@ pub(all) enum ProgramExit {
   ProgramCancelled
   ProgramTimedOut
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn ProgramExit::equal(Self, Self) -> Bool
+#deprecated
+pub fn ProgramExit::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn ProgramExit::to_repr(Self) -> @debug.Repr
 
 pub(all) struct ProgramOptions {
   alternate_screen : Bool
@@ -381,21 +491,27 @@ pub(all) struct ProgramOptions {
   focus_events : Bool
   hide_cursor : Bool
   renderer_enabled : Bool
-  renderer_fps : Int
-  max_messages_per_frame : Int
-  resize_poll_millis : Int
+  renderer_fps : Int32
+  max_messages_per_frame : Int32
+  resize_poll_millis : Int32
 } derive(Eq, @debug.Debug)
 pub fn ProgramOptions::alternate_screen(Self, Bool) -> Self
 pub fn ProgramOptions::bracketed_paste(Self, Bool) -> Self
 pub fn ProgramOptions::default() -> Self
+#deprecated
+pub fn ProgramOptions::equal(Self, Self) -> Bool
 pub fn ProgramOptions::focus_events(Self, Bool) -> Self
-pub fn ProgramOptions::fps(Self, Int) -> Self
+pub fn ProgramOptions::fps(Self, Int32) -> Self
 pub fn ProgramOptions::hide_cursor(Self, Bool) -> Self
 pub fn ProgramOptions::inline() -> Self
-pub fn ProgramOptions::max_messages_per_frame(Self, Int) -> Self
+pub fn ProgramOptions::max_messages_per_frame(Self, Int32) -> Self
 pub fn ProgramOptions::mouse(Self, MouseMode) -> Self
+#deprecated
+pub fn ProgramOptions::not_equal(Self, Self) -> Bool
 pub fn ProgramOptions::renderer(Self, Bool) -> Self
-pub fn ProgramOptions::resize_poll_millis(Self, Int) -> Self
+pub fn ProgramOptions::resize_poll_millis(Self, Int32) -> Self
+#deprecated
+pub fn ProgramOptions::to_repr(Self) -> @debug.Repr
 pub fn ProgramOptions::without_renderer(Self) -> Self
 
 pub(all) struct ProgramRunResult[Model] {
@@ -403,7 +519,7 @@ pub(all) struct ProgramRunResult[Model] {
   terminal_commands : Array[TerminalCommand]
   frames : Array[Frame]
   quit : Bool
-  steps : Int
+  steps : Int32
   limit_reached : Bool
 }
 
@@ -411,11 +527,23 @@ pub(all) struct ProgramRuntimeResult[Model] {
   model : Model
   exit : ProgramExit
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn[Model : Eq] ProgramRuntimeResult::equal(Self[Model], Self[Model]) -> Bool
+#deprecated
+pub fn[Model : Eq] ProgramRuntimeResult::not_equal(Self[Model], Self[Model]) -> Bool
+#deprecated
+pub fn[Model : @debug.Debug] ProgramRuntimeResult::to_repr(Self[Model]) -> @debug.Repr
 
 pub(all) struct Size {
-  width : Int
-  height : Int
+  width : Int32
+  height : Int32
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn Size::equal(Self, Self) -> Bool
+#deprecated
+pub fn Size::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Size::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Style {
   fg : Color
@@ -427,15 +555,15 @@ pub(all) struct Style {
   blink : Bool
   reverse : Bool
   strikethrough : Bool
-  width : Int
-  height : Int
+  width : Int32
+  height : Int32
   padding : Edge
   border : Border
   align_horizontal : Align
   align_vertical : Align
   align_set : Bool
-  clip_width : Int
-  clip_height : Int
+  clip_width : Int32
+  clip_height : Int32
 } derive(Eq, @debug.Debug)
 pub fn Style::align(Self, horizontal? : Align, vertical? : Align) -> Self
 pub fn Style::bg(Self, Color) -> Self
@@ -445,16 +573,22 @@ pub fn Style::border(Self, kind? : Border) -> Self
 pub fn Style::clip(Self, Size) -> Self
 pub fn Style::default() -> Self
 pub fn Style::dim(Self) -> Self
+#deprecated
+pub fn Style::equal(Self, Self) -> Bool
 pub fn Style::fg(Self, Color) -> Self
-pub fn Style::height(Self, Int) -> Self
+pub fn Style::height(Self, Int32) -> Self
 pub fn Style::italic(Self) -> Self
 pub fn Style::merge(Self, Self) -> Self
+#deprecated
+pub fn Style::not_equal(Self, Self) -> Bool
 pub fn Style::padding(Self, Edge) -> Self
 pub fn Style::reverse(Self) -> Self
-pub fn Style::size(Self, width? : Int, height? : Int) -> Self
+pub fn Style::size(Self, width? : Int32, height? : Int32) -> Self
 pub fn Style::strikethrough(Self) -> Self
+#deprecated
+pub fn Style::to_repr(Self) -> @debug.Repr
 pub fn Style::underline(Self) -> Self
-pub fn Style::width(Self, Int) -> Self
+pub fn Style::width(Self, Int32) -> Self
 
 type Sub[Msg]
 pub fn[Msg] Sub::batch(Array[Self[Msg]]) -> Self[Msg]
@@ -469,7 +603,7 @@ pub fn[Msg] Sub::mouse_events((Mouse) -> Msg) -> Self[Msg]
 pub fn[Msg] Sub::none() -> Self[Msg]
 pub fn[Msg] Sub::paste((String) -> Msg) -> Self[Msg]
 pub fn[Msg] Sub::resize((Size) -> Msg) -> Self[Msg]
-pub fn[Msg] Sub::tick(Int, Msg) -> Self[Msg]
+pub fn[Msg] Sub::tick(Int32, Msg) -> Self[Msg]
 
 pub(all) enum TerminalCommand {
   QuitProgram
@@ -491,6 +625,12 @@ pub(all) enum TerminalCommand {
   DisableFocusEvents
   SetWindowTitle(String)
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn TerminalCommand::equal(Self, Self) -> Bool
+#deprecated
+pub fn TerminalCommand::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn TerminalCommand::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 

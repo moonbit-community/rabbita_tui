@@ -7,23 +7,23 @@ import {
 }
 
 // Values
-pub fn keymap(bindings~ : Array[KeyBinding], width~ : Int, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+pub fn keymap(bindings~ : Array[KeyBinding], width~ : Int32, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
 
 pub fn modal(title~ : String, size~ : @rabbita_tui.Size, style? : @rabbita_tui.Style, Array[@rabbita_tui.Node]) -> @rabbita_tui.Node
 
-pub fn paginator(page~ : Int, per_page~ : Int, total_items~ : Int, width~ : Int, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+pub fn paginator(page~ : Int32, per_page~ : Int32, total_items~ : Int32, width~ : Int32, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
 
-pub fn progress(current~ : Int, total~ : Int, width~ : Int, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+pub fn progress(current~ : Int32, total~ : Int32, width~ : Int32, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
 
-pub fn spinner(style? : @rabbita_tui.Style, Int) -> @rabbita_tui.Node
+pub fn spinner(style? : @rabbita_tui.Style, Int32) -> @rabbita_tui.Node
 
-pub fn status_line(left~ : String, right~ : String, width~ : Int, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+pub fn status_line(left~ : String, right~ : String, width~ : Int32, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
 
-pub fn table(columns~ : Array[TableColumn], rows~ : Array[Array[String]], selected? : Int, offset? : Int, size~ : @rabbita_tui.Size, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+pub fn table(columns~ : Array[TableColumn], rows~ : Array[Array[String]], selected? : Int32, offset? : Int32, size~ : @rabbita_tui.Size, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
 
-pub fn tabs(labels~ : Array[String], active? : Int, width~ : Int, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+pub fn tabs(labels~ : Array[String], active? : Int32, width~ : Int32, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
 
-pub fn timer(remaining_ms~ : Int, width~ : Int, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+pub fn timer(remaining_ms~ : Int32, width~ : Int32, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
 
 // Errors
 
@@ -31,68 +31,122 @@ pub fn timer(remaining_ms~ : Int, width~ : Int, style? : @rabbita_tui.Style) -> 
 pub(all) struct CommandPalette {
   input : TextInput
   items : Array[String]
-  selected : Int
+  selected : Int32
 } derive(Eq, @debug.Debug)
-pub fn CommandPalette::CommandPalette(items~ : Array[String], selected? : Int) -> Self
+pub fn CommandPalette::CommandPalette(items~ : Array[String], selected? : Int32) -> Self
+#deprecated
+pub fn CommandPalette::equal(Self, Self) -> Bool
 pub fn CommandPalette::items(Self) -> Array[String]
+#deprecated
+pub fn CommandPalette::not_equal(Self, Self) -> Bool
 pub fn CommandPalette::selected_item(Self) -> String?
+#deprecated
+pub fn CommandPalette::to_repr(Self) -> @debug.Repr
 pub fn CommandPalette::update(Self, CommandPaletteMsg) -> Self
 pub fn CommandPalette::view(Self, size~ : @rabbita_tui.Size, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
 
 pub(all) enum CommandPaletteMsg {
   CommandPaletteKey(@rabbita_tui.Key)
-  CommandPaletteSelect(Int)
+  CommandPaletteSelect(Int32)
   CommandPaletteSetInput(String)
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn CommandPaletteMsg::equal(Self, Self) -> Bool
+#deprecated
+pub fn CommandPaletteMsg::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn CommandPaletteMsg::to_repr(Self) -> @debug.Repr
 
 pub(all) struct KeyBinding {
   keys : Array[@rabbita_tui.Key]
   help : String
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn KeyBinding::equal(Self, Self) -> Bool
+#deprecated
+pub fn KeyBinding::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn KeyBinding::to_repr(Self) -> @debug.Repr
 
 pub(all) struct List {
   items : Array[String]
-  selected : Int
-  offset : Int
+  selected : Int32
+  offset : Int32
 } derive(Eq, @debug.Debug)
-pub fn List::List(items~ : Array[String], selected? : Int, offset? : Int) -> Self
+pub fn List::List(items~ : Array[String], selected? : Int32, offset? : Int32) -> Self
+#deprecated
+pub fn List::equal(Self, Self) -> Bool
+#deprecated
+pub fn List::not_equal(Self, Self) -> Bool
 pub fn List::selected_item(Self) -> String?
+#deprecated
+pub fn List::to_repr(Self) -> @debug.Repr
 pub fn List::update(Self, ListMsg) -> Self
 pub fn List::view(Self, size~ : @rabbita_tui.Size, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
 
 pub(all) enum ListMsg {
-  ListMove(Int, Int)
-  ListPage(Int, Int)
-  ListSelect(Int)
+  ListMove(Int32, Int32)
+  ListPage(Int32, Int32)
+  ListSelect(Int32)
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn ListMsg::equal(Self, Self) -> Bool
+#deprecated
+pub fn ListMsg::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn ListMsg::to_repr(Self) -> @debug.Repr
 
 pub(all) struct TableColumn {
   title : String
-  width : Int
+  width : Int32
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn TableColumn::equal(Self, Self) -> Bool
+#deprecated
+pub fn TableColumn::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn TableColumn::to_repr(Self) -> @debug.Repr
 
 pub(all) struct TextInput {
   value : String
-  cursor : Int
+  cursor : Int32
   placeholder : String
 } derive(Eq, @debug.Debug)
 pub fn TextInput::TextInput(placeholder? : String, value? : String) -> Self
+#deprecated
+pub fn TextInput::equal(Self, Self) -> Bool
+#deprecated
+pub fn TextInput::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn TextInput::to_repr(Self) -> @debug.Repr
 pub fn TextInput::update(Self, TextInputMsg) -> Self
-pub fn TextInput::view(Self, width~ : Int, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
+pub fn TextInput::view(Self, width~ : Int32, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
 
 pub(all) enum TextInputMsg {
   TextInputKey(@rabbita_tui.Key)
   TextInputSet(String)
   TextInputClear
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn TextInputMsg::equal(Self, Self) -> Bool
+#deprecated
+pub fn TextInputMsg::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn TextInputMsg::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Textarea {
   lines : Array[String]
-  row : Int
-  column : Int
+  row : Int32
+  column : Int32
   placeholder : String
 } derive(Eq, @debug.Debug)
 pub fn Textarea::Textarea(placeholder? : String, value? : String) -> Self
+#deprecated
+pub fn Textarea::equal(Self, Self) -> Bool
+#deprecated
+pub fn Textarea::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Textarea::to_repr(Self) -> @debug.Repr
 pub fn Textarea::update(Self, TextareaMsg) -> Self
 pub fn Textarea::value(Self) -> String
 pub fn Textarea::view(Self, size~ : @rabbita_tui.Size, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
@@ -102,19 +156,37 @@ pub(all) enum TextareaMsg {
   TextareaSet(String)
   TextareaClear
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn TextareaMsg::equal(Self, Self) -> Bool
+#deprecated
+pub fn TextareaMsg::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn TextareaMsg::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Viewport {
   lines : Array[String]
-  offset : Int
+  offset : Int32
 } derive(Eq, @debug.Debug)
-pub fn Viewport::Viewport(lines~ : Array[String], offset? : Int) -> Self
+pub fn Viewport::Viewport(lines~ : Array[String], offset? : Int32) -> Self
+#deprecated
+pub fn Viewport::equal(Self, Self) -> Bool
+#deprecated
+pub fn Viewport::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Viewport::to_repr(Self) -> @debug.Repr
 pub fn Viewport::update(Self, ViewportMsg) -> Self
 pub fn Viewport::view(Self, size~ : @rabbita_tui.Size, style? : @rabbita_tui.Style) -> @rabbita_tui.Node
 
 pub(all) enum ViewportMsg {
-  ViewportScroll(Int, Int)
-  ViewportJump(Int, Int)
+  ViewportScroll(Int32, Int32)
+  ViewportJump(Int32, Int32)
 } derive(Eq, @debug.Debug)
+#deprecated
+pub fn ViewportMsg::equal(Self, Self) -> Bool
+#deprecated
+pub fn ViewportMsg::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn ViewportMsg::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 

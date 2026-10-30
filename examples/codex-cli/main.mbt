@@ -647,9 +647,9 @@ fn line_with_prompt_cursor(line : String, column : Int32) -> String {
     line.offset_of_nth_char(column).unwrap_or(line.length())
   }
   let out = StringBuilder(size_hint=line.length() + 1)
-  out.write_view(line.view(end_offset=offset))
+  out.write_view(line[:offset])
   out.write_char('█')
-  out.write_view(line.view(start_offset=offset))
+  out.write_view(line[offset:])
   out.to_string()
 }
 
